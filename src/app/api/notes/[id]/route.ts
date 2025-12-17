@@ -30,9 +30,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     try {
         const body = await req.json();
-        const { content, title, reprocess } = body as {
+        const { content, title, tags, reprocess } = body as {
             content?: string;
             title?: string;
+            tags?: string[];
             reprocess?: boolean;
         };
 
@@ -43,14 +44,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         }
 
         // Build update data
-        const updateData: { content?: string; title?: string; status?: string } = {};
+        const updateData: { content?: string; title?: string; tags?: string; status?: string } = {};
 
-        if (content !== undefined) {
-            updateData.content = content;
-        }
-        if (title !== undefined) {
-            updateData.title = title;
-        }
+        if (content !== undefined) updateData.content = content;
+        if (title !== undefined) updateData.title = title;
+        if (tags !== undefined) updateData.tags = JSON.stringify(tags);
 
         // If reprocess requested, set status to processing
         if (reprocess) {

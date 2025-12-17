@@ -986,6 +986,7 @@ export namespace Prisma {
     title: string | null
     summary: string | null
     topics: string | null
+    tags: string | null
     embedding: string | null
     createdAt: Date | null
     status: string | null
@@ -999,6 +1000,7 @@ export namespace Prisma {
     title: string | null
     summary: string | null
     topics: string | null
+    tags: string | null
     embedding: string | null
     createdAt: Date | null
     status: string | null
@@ -1012,6 +1014,7 @@ export namespace Prisma {
     title: number
     summary: number
     topics: number
+    tags: number
     embedding: number
     createdAt: number
     status: number
@@ -1027,6 +1030,7 @@ export namespace Prisma {
     title?: true
     summary?: true
     topics?: true
+    tags?: true
     embedding?: true
     createdAt?: true
     status?: true
@@ -1040,6 +1044,7 @@ export namespace Prisma {
     title?: true
     summary?: true
     topics?: true
+    tags?: true
     embedding?: true
     createdAt?: true
     status?: true
@@ -1053,6 +1058,7 @@ export namespace Prisma {
     title?: true
     summary?: true
     topics?: true
+    tags?: true
     embedding?: true
     createdAt?: true
     status?: true
@@ -1139,6 +1145,7 @@ export namespace Prisma {
     title: string | null
     summary: string | null
     topics: string | null
+    tags: string | null
     embedding: string | null
     createdAt: Date
     status: string
@@ -1169,6 +1176,7 @@ export namespace Prisma {
     title?: boolean
     summary?: boolean
     topics?: boolean
+    tags?: boolean
     embedding?: boolean
     createdAt?: boolean
     status?: boolean
@@ -1185,6 +1193,7 @@ export namespace Prisma {
     title?: boolean
     summary?: boolean
     topics?: boolean
+    tags?: boolean
     embedding?: boolean
     createdAt?: boolean
     status?: boolean
@@ -1198,6 +1207,7 @@ export namespace Prisma {
     title?: boolean
     summary?: boolean
     topics?: boolean
+    tags?: boolean
     embedding?: boolean
     createdAt?: boolean
     status?: boolean
@@ -1224,6 +1234,7 @@ export namespace Prisma {
       title: string | null
       summary: string | null
       topics: string | null
+      tags: string | null
       embedding: string | null
       createdAt: Date
       status: string
@@ -1629,6 +1640,7 @@ export namespace Prisma {
     readonly title: FieldRef<"Note", 'String'>
     readonly summary: FieldRef<"Note", 'String'>
     readonly topics: FieldRef<"Note", 'String'>
+    readonly tags: FieldRef<"Note", 'String'>
     readonly embedding: FieldRef<"Note", 'String'>
     readonly createdAt: FieldRef<"Note", 'DateTime'>
     readonly status: FieldRef<"Note", 'String'>
@@ -3000,6 +3012,7 @@ export namespace Prisma {
     title: 'title',
     summary: 'summary',
     topics: 'topics',
+    tags: 'tags',
     embedding: 'embedding',
     createdAt: 'createdAt',
     status: 'status'
@@ -3083,6 +3096,7 @@ export namespace Prisma {
     title?: StringNullableFilter<"Note"> | string | null
     summary?: StringNullableFilter<"Note"> | string | null
     topics?: StringNullableFilter<"Note"> | string | null
+    tags?: StringNullableFilter<"Note"> | string | null
     embedding?: StringNullableFilter<"Note"> | string | null
     createdAt?: DateTimeFilter<"Note"> | Date | string
     status?: StringFilter<"Note"> | string
@@ -3098,6 +3112,7 @@ export namespace Prisma {
     title?: SortOrderInput | SortOrder
     summary?: SortOrderInput | SortOrder
     topics?: SortOrderInput | SortOrder
+    tags?: SortOrderInput | SortOrder
     embedding?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     status?: SortOrder
@@ -3116,6 +3131,7 @@ export namespace Prisma {
     title?: StringNullableFilter<"Note"> | string | null
     summary?: StringNullableFilter<"Note"> | string | null
     topics?: StringNullableFilter<"Note"> | string | null
+    tags?: StringNullableFilter<"Note"> | string | null
     embedding?: StringNullableFilter<"Note"> | string | null
     createdAt?: DateTimeFilter<"Note"> | Date | string
     status?: StringFilter<"Note"> | string
@@ -3131,6 +3147,7 @@ export namespace Prisma {
     title?: SortOrderInput | SortOrder
     summary?: SortOrderInput | SortOrder
     topics?: SortOrderInput | SortOrder
+    tags?: SortOrderInput | SortOrder
     embedding?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     status?: SortOrder
@@ -3150,6 +3167,7 @@ export namespace Prisma {
     title?: StringNullableWithAggregatesFilter<"Note"> | string | null
     summary?: StringNullableWithAggregatesFilter<"Note"> | string | null
     topics?: StringNullableWithAggregatesFilter<"Note"> | string | null
+    tags?: StringNullableWithAggregatesFilter<"Note"> | string | null
     embedding?: StringNullableWithAggregatesFilter<"Note"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Note"> | Date | string
     status?: StringWithAggregatesFilter<"Note"> | string
@@ -3229,6 +3247,7 @@ export namespace Prisma {
     title?: string | null
     summary?: string | null
     topics?: string | null
+    tags?: string | null
     embedding?: string | null
     createdAt?: Date | string
     status?: string
@@ -3244,6 +3263,7 @@ export namespace Prisma {
     title?: string | null
     summary?: string | null
     topics?: string | null
+    tags?: string | null
     embedding?: string | null
     createdAt?: Date | string
     status?: string
@@ -3259,6 +3279,7 @@ export namespace Prisma {
     title?: NullableStringFieldUpdateOperationsInput | string | null
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     topics?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: NullableStringFieldUpdateOperationsInput | string | null
     embedding?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string
@@ -3274,6 +3295,7 @@ export namespace Prisma {
     title?: NullableStringFieldUpdateOperationsInput | string | null
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     topics?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: NullableStringFieldUpdateOperationsInput | string | null
     embedding?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string
@@ -3289,6 +3311,7 @@ export namespace Prisma {
     title?: string | null
     summary?: string | null
     topics?: string | null
+    tags?: string | null
     embedding?: string | null
     createdAt?: Date | string
     status?: string
@@ -3302,6 +3325,7 @@ export namespace Prisma {
     title?: NullableStringFieldUpdateOperationsInput | string | null
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     topics?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: NullableStringFieldUpdateOperationsInput | string | null
     embedding?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string
@@ -3315,6 +3339,7 @@ export namespace Prisma {
     title?: NullableStringFieldUpdateOperationsInput | string | null
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     topics?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: NullableStringFieldUpdateOperationsInput | string | null
     embedding?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string
@@ -3443,6 +3468,7 @@ export namespace Prisma {
     title?: SortOrder
     summary?: SortOrder
     topics?: SortOrder
+    tags?: SortOrder
     embedding?: SortOrder
     createdAt?: SortOrder
     status?: SortOrder
@@ -3456,6 +3482,7 @@ export namespace Prisma {
     title?: SortOrder
     summary?: SortOrder
     topics?: SortOrder
+    tags?: SortOrder
     embedding?: SortOrder
     createdAt?: SortOrder
     status?: SortOrder
@@ -3469,6 +3496,7 @@ export namespace Prisma {
     title?: SortOrder
     summary?: SortOrder
     topics?: SortOrder
+    tags?: SortOrder
     embedding?: SortOrder
     createdAt?: SortOrder
     status?: SortOrder
@@ -3964,6 +3992,7 @@ export namespace Prisma {
     title?: string | null
     summary?: string | null
     topics?: string | null
+    tags?: string | null
     embedding?: string | null
     createdAt?: Date | string
     status?: string
@@ -3978,6 +4007,7 @@ export namespace Prisma {
     title?: string | null
     summary?: string | null
     topics?: string | null
+    tags?: string | null
     embedding?: string | null
     createdAt?: Date | string
     status?: string
@@ -3997,6 +4027,7 @@ export namespace Prisma {
     title?: string | null
     summary?: string | null
     topics?: string | null
+    tags?: string | null
     embedding?: string | null
     createdAt?: Date | string
     status?: string
@@ -4011,6 +4042,7 @@ export namespace Prisma {
     title?: string | null
     summary?: string | null
     topics?: string | null
+    tags?: string | null
     embedding?: string | null
     createdAt?: Date | string
     status?: string
@@ -4041,6 +4073,7 @@ export namespace Prisma {
     title?: NullableStringFieldUpdateOperationsInput | string | null
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     topics?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: NullableStringFieldUpdateOperationsInput | string | null
     embedding?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string
@@ -4055,6 +4088,7 @@ export namespace Prisma {
     title?: NullableStringFieldUpdateOperationsInput | string | null
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     topics?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: NullableStringFieldUpdateOperationsInput | string | null
     embedding?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string
@@ -4080,6 +4114,7 @@ export namespace Prisma {
     title?: NullableStringFieldUpdateOperationsInput | string | null
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     topics?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: NullableStringFieldUpdateOperationsInput | string | null
     embedding?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string
@@ -4094,6 +4129,7 @@ export namespace Prisma {
     title?: NullableStringFieldUpdateOperationsInput | string | null
     summary?: NullableStringFieldUpdateOperationsInput | string | null
     topics?: NullableStringFieldUpdateOperationsInput | string | null
+    tags?: NullableStringFieldUpdateOperationsInput | string | null
     embedding?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string

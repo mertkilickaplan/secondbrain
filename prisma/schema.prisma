@@ -16,6 +16,7 @@ model Note {
   title     String?
   summary   String?
   topics    String?  // JSON string
+  tags      String?  // JSON string (Manual tags)
   embedding String?  // JSON string
   createdAt DateTime @default(now())
   status    String   @default("processing") // "processing" | "ready" | "error"

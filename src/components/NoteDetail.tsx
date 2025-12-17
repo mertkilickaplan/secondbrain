@@ -19,7 +19,13 @@ export default function NoteDetail({ node, edges, allNodes, onClose, onDataChang
     const [isEditing, setIsEditing] = useState(false);
     const [editTitle, setEditTitle] = useState("");
     const [editContent, setEditContent] = useState("");
+    const [editTags, setEditTags] = useState<string[]>([]);
+    const [newTag, setNewTag] = useState("");
     const [isSaving, setIsSaving] = useState(false);
+
+    // Initialize tags when entering edit mode or node changes
+    /* eslint-disable react-hooks/exhaustive-deps */
+    const tags = node?.tags ? JSON.parse(node.tags) : [];
 
     if (!node) return null;
 
@@ -49,6 +55,7 @@ export default function NoteDetail({ node, edges, allNodes, onClose, onDataChang
     const handleStartEdit = () => {
         setEditTitle(node.title || "");
         setEditContent(node.content || "");
+        setEditTags(tags);
         setIsEditing(true);
     };
 
@@ -56,6 +63,27 @@ export default function NoteDetail({ node, edges, allNodes, onClose, onDataChang
         setIsEditing(false);
         setEditTitle("");
         setEditContent("");
+        setEditTags([]);
+        setNewTag("");
+    };
+
+    const handleAddTag = () => {
+        if (!newTag.trim()) return;
+        if (!editTags.includes(newTag.trim())) {
+            setEditTags([...editTags, newTag.trim()]);
+        }
+        setNewTag("");
+    };
+
+    const handleRemoveTag = (tagToRemove: string) => {
+        setEditTags(editTags.filter(t => t !== tagToRemove));
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleAddTag();
+        }
     };
 
     const handleSaveEdit = async (reprocess: boolean = false) => {
@@ -67,6 +95,7 @@ export default function NoteDetail({ node, edges, allNodes, onClose, onDataChang
                 body: JSON.stringify({
                     title: editTitle,
                     content: editContent,
+                    tags: editTags,
                     reprocess,
                 }),
             });
@@ -191,6 +220,44 @@ export default function NoteDetail({ node, edges, allNodes, onClose, onDataChang
             )}
 
             <div className="space-y-6">
+                {/* Tags Section */}
+                <div>
+                    <h3 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Tags</h3>
+                    {isEditing ? (
+                        <div className="space-y-2 mb-4">
+                            <div className="flex flex-wrap gap-2">
+                                {editTags.map(tag => (
+                                    <span key={tag} className="bg-primary/20 text-primary text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                        {tag}
+                                        <button onClick={() => handleRemoveTag(tag)} className="hover:text-foreground">×</button>
+                                    </span>
+                                ))}
+                            </div>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={newTag}
+                                    onChange={(e) => setNewTag(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    className="flex-1 text-sm bg-muted/50 border border-border rounded-lg px-3 py-1.5 outline-none focus:ring-1 focus:ring-primary"
+                                    placeholder="Add tag..."
+                                />
+                                <button onClick={handleAddTag} className="text-xs px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-lg transition-colors">Add</button>
+                            </div>
+                        </div>
+                    ) : (
+                        tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-4">
+                                {tags.map((tag: string) => (
+                                    <span key={tag} className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full border border-border">
+                                        #{tag}
+                                    </span>
+                                ))}
+                            </div>
+                        )
+                    )}
+                </div>
+
                 {/* Content */}
                 <div>
                     <h3 className="text-xs font-semibold uppercase text-muted-foreground mb-2">My Note</h3>

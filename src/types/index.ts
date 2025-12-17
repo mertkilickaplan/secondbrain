@@ -8,6 +8,7 @@ export interface Note {
     title?: string | null;
     summary?: string | null;
     topics?: string | null;
+    tags?: string | null;
     embedding?: string | null;
     createdAt: string;
     status: "processing" | "ready" | "error";

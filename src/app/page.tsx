@@ -6,6 +6,7 @@ import GraphView from "@/components/GraphView";
 import NoteDetail from "@/components/NoteDetail";
 import ThemeToggle from "@/components/ThemeToggle";
 import SearchBar from "@/components/SearchBar";
+import ExportImportModal from "@/components/ExportImportModal";
 import { GraphSkeleton } from "@/components/Skeleton";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import type { GraphData, GraphNode } from "@/types";
@@ -15,6 +16,7 @@ export default function Home() {
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isExportImportOpen, setIsExportImportOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -86,30 +88,55 @@ export default function Home() {
         </p>
       </div>
 
-      {/* Theme Toggle (Top Right) */}
-      <ThemeToggle />
-
-      {/* Search Button (Top Right, before theme toggle) */}
-      <button
-        onClick={() => setIsSearchOpen(true)}
-        className="fixed top-2 sm:top-4 right-14 sm:right-16 z-40 p-2 rounded-lg bg-card/80 backdrop-blur-md border border-border hover:bg-muted transition-colors flex items-center gap-2 min-w-[44px] min-h-[44px] justify-center"
-        aria-label="Search notes"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          className="text-muted-foreground"
+      {/* Header Buttons (Top Right) */}
+      <div className="fixed top-2 sm:top-4 right-3 sm:right-6 z-40 flex items-center gap-2">
+        {/* Export/Import Button */}
+        <button
+          onClick={() => setIsExportImportOpen(true)}
+          className="p-2 rounded-lg bg-card/80 backdrop-blur-md border border-border hover:bg-muted transition-colors flex items-center justify-center min-w-[44px] min-h-[44px]"
+          aria-label="Export/Import data"
         >
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.3-4.3" />
-        </svg>
-        <kbd className="hidden sm:inline text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">⌘K</kbd>
-      </button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="text-muted-foreground"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+        </button>
+
+        {/* Search Button */}
+        <button
+          onClick={() => setIsSearchOpen(true)}
+          className="p-2 rounded-lg bg-card/80 backdrop-blur-md border border-border hover:bg-muted transition-colors flex items-center gap-2 min-w-[44px] min-h-[44px] justify-center"
+          aria-label="Search notes"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="text-muted-foreground"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <kbd className="hidden sm:inline text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">⌘K</kbd>
+        </button>
+
+        {/* Theme Toggle */}
+        <ThemeToggle />
+      </div>
 
       {/* Input Area (Centered Top) */}
       <InputArea onNoteAdded={handleNoteAdded} />
@@ -138,6 +165,13 @@ export default function Home() {
         onSelectNode={handleSelectNodeById}
       />
 
+      {/* Export/Import Modal */}
+      <ExportImportModal
+        isOpen={isExportImportOpen}
+        onClose={() => setIsExportImportOpen(false)}
+        onDataChange={fetchData}
+      />
+
       {/* Detail Sidebar (Right Overlay) */}
       {isSidebarOpen && (
         <NoteDetail
@@ -151,4 +185,3 @@ export default function Home() {
     </main>
   );
 }
-

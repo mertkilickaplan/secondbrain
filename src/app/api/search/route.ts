@@ -20,6 +20,7 @@ export async function GET(req: Request) {
                     { content: { contains: query } },
                     { summary: { contains: query } },
                     { topics: { contains: query } },
+                    { tags: { contains: query } },
                 ],
             },
             select: {
