@@ -51,8 +51,8 @@ export default function InputArea({ onNoteAdded }: { onNoteAdded: () => void }) 
     };
 
     return (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 w-full max-w-2xl z-20 px-4">
-            <div className="bg-card/80 backdrop-blur-md border border-border rounded-xl shadow-lg p-3 transition-all focus-within:ring-2 focus-within:ring-primary/50">
+        <div className="absolute top-16 sm:top-4 left-1/2 -translate-x-1/2 w-full max-w-2xl z-20 px-2 sm:px-4">
+            <div className="bg-card/90 sm:bg-card/80 backdrop-blur-md border border-border rounded-xl shadow-lg p-2 sm:p-3 transition-all focus-within:ring-2 focus-within:ring-primary/50">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-2">
 
                     <div className="flex items-center gap-2 mb-1">

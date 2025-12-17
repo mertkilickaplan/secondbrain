@@ -6,15 +6,19 @@ import GraphView from "@/components/GraphView";
 import NoteDetail from "@/components/NoteDetail";
 import ThemeToggle from "@/components/ThemeToggle";
 import SearchBar from "@/components/SearchBar";
+import { GraphSkeleton } from "@/components/Skeleton";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import type { GraphData, GraphNode } from "@/types";
 
 export default function Home() {
-  const [data, setData] = useState({ nodes: [], links: [] });
-  const [selectedNode, setSelectedNode] = useState(null);
+  const [data, setData] = useState<GraphData>({ nodes: [], links: [] });
+  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
+    setIsLoading(true);
     try {
       const res = await fetch("/api/graph");
       if (res.ok) {
@@ -23,6 +27,8 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Failed to fetch graph data", error);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -71,11 +77,11 @@ export default function Home() {
     <main className="h-screen w-screen bg-background text-foreground flex flex-col overflow-hidden relative">
 
       {/* Header / Brand (Absolute Top Left) */}
-      <div className="absolute top-4 left-6 z-10 pointer-events-none select-none">
-        <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
+      <div className="absolute top-2 sm:top-4 left-3 sm:left-6 z-10 pointer-events-none select-none">
+        <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
           Second Brain Lite
         </h1>
-        <p className="text-[10px] text-muted-foreground uppercase tracking-widest opacity-70">
+        <p className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest opacity-70">
           AI Knowledge Map
         </p>
       </div>
@@ -86,7 +92,7 @@ export default function Home() {
       {/* Search Button (Top Right, before theme toggle) */}
       <button
         onClick={() => setIsSearchOpen(true)}
-        className="fixed top-4 right-16 z-40 p-2 rounded-lg bg-card/80 backdrop-blur-md border border-border hover:bg-muted transition-colors flex items-center gap-2"
+        className="fixed top-2 sm:top-4 right-14 sm:right-16 z-40 p-2 rounded-lg bg-card/80 backdrop-blur-md border border-border hover:bg-muted transition-colors flex items-center gap-2 min-w-[44px] min-h-[44px] justify-center"
         aria-label="Search notes"
       >
         <svg
@@ -110,7 +116,9 @@ export default function Home() {
 
       {/* Graph Area (Full Screen) */}
       <div className="flex-1 relative cursor-crosshair">
-        {data.nodes.length === 0 ? (
+        {isLoading ? (
+          <GraphSkeleton />
+        ) : data.nodes.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center text-muted-foreground pointer-events-none">
             <div className="text-center">
               <p className="mb-2">Your brain is empty.</p>
