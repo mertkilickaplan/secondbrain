@@ -1,66 +1,146 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+
+import { useEffect, useState, useCallback, useMemo } from "react";
+import InputArea from "@/components/InputArea";
+import GraphView from "@/components/GraphView";
+import NoteDetail from "@/components/NoteDetail";
+import ThemeToggle from "@/components/ThemeToggle";
+import SearchBar from "@/components/SearchBar";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 export default function Home() {
+  const [data, setData] = useState({ nodes: [], links: [] });
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await fetch("/api/graph");
+      if (res.ok) {
+        const graphData = await res.json();
+        setData(graphData);
+      }
+    } catch (error) {
+      console.error("Failed to fetch graph data", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleNodeClick = (node: any) => {
+    setSelectedNode(node);
+    setIsSidebarOpen(true);
+  };
+
+  const handleNoteAdded = () => {
+    // Refresh graph after adding a note
+    fetchData();
+  };
+
+  const handleSelectNodeById = (nodeId: string) => {
+    const node = data.nodes.find((n: any) => n.id === nodeId);
+    if (node) {
+      setSelectedNode(node);
+      setIsSidebarOpen(true);
+    }
+  };
+
+  // Keyboard shortcuts handlers
+  const shortcutHandlers = useMemo(() => ({
+    onSearch: () => setIsSearchOpen(true),
+    onCloseSidebar: () => {
+      if (isSearchOpen) {
+        setIsSearchOpen(false);
+      } else if (isSidebarOpen) {
+        setIsSidebarOpen(false);
+      }
+    },
+    onNewNote: () => {
+      // Focus the input area
+      const textarea = document.querySelector("textarea");
+      if (textarea) textarea.focus();
+    },
+  }), [isSearchOpen, isSidebarOpen]);
+
+  useKeyboardShortcuts(shortcutHandlers);
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="h-screen w-screen bg-background text-foreground flex flex-col overflow-hidden relative">
+
+      {/* Header / Brand (Absolute Top Left) */}
+      <div className="absolute top-4 left-6 z-10 pointer-events-none select-none">
+        <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
+          Second Brain Lite
+        </h1>
+        <p className="text-[10px] text-muted-foreground uppercase tracking-widest opacity-70">
+          AI Knowledge Map
+        </p>
+      </div>
+
+      {/* Theme Toggle (Top Right) */}
+      <ThemeToggle />
+
+      {/* Search Button (Top Right, before theme toggle) */}
+      <button
+        onClick={() => setIsSearchOpen(true)}
+        className="fixed top-4 right-16 z-40 p-2 rounded-lg bg-card/80 backdrop-blur-md border border-border hover:bg-muted transition-colors flex items-center gap-2"
+        aria-label="Search notes"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="text-muted-foreground"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.3-4.3" />
+        </svg>
+        <kbd className="hidden sm:inline text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">⌘K</kbd>
+      </button>
+
+      {/* Input Area (Centered Top) */}
+      <InputArea onNoteAdded={handleNoteAdded} />
+
+      {/* Graph Area (Full Screen) */}
+      <div className="flex-1 relative cursor-crosshair">
+        {data.nodes.length === 0 ? (
+          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground pointer-events-none">
+            <div className="text-center">
+              <p className="mb-2">Your brain is empty.</p>
+              <p className="text-xs opacity-50">Write a note above to start connecting dots.</p>
+              <p className="text-xs opacity-30 mt-4">Press <kbd className="bg-muted px-1 rounded">⌘K</kbd> to search</p>
+            </div>
+          </div>
+        ) : (
+          <GraphView data={data} onNodeClick={handleNodeClick} />
+        )}
+      </div>
+
+      {/* Search Modal */}
+      <SearchBar
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSelectNode={handleSelectNodeById}
+      />
+
+      {/* Detail Sidebar (Right Overlay) */}
+      {isSidebarOpen && (
+        <NoteDetail
+          node={selectedNode}
+          edges={data.links}
+          allNodes={data.nodes}
+          onClose={() => setIsSidebarOpen(false)}
+          onDataChange={fetchData}
         />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      )}
+    </main>
   );
 }
+

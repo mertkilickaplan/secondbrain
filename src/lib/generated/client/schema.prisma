@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/lib/generated/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  content   String
+  type      String   @default("text") // "text" | "url"
+  url       String?
+  title     String?
+  summary   String?
+  topics    String? // JSON string
+  embedding String? // JSON string
+  createdAt DateTime @default(now())
+  status    String   @default("processing") // "processing" | "ready" | "error"
+
+  // Relations
+  outgoingEdges Edge[] @relation("SourceEdges")
+  incomingEdges Edge[] @relation("TargetEdges")
+
+  @@index([status])
+}
+
+model Edge {
+  id          String   @id @default(uuid())
+  sourceId    String
+  targetId    String
+  similarity  Float
+  explanation String
+  createdAt   DateTime @default(now())
+  source      Note     @relation("SourceEdges", fields: [sourceId], references: [id], onDelete: Cascade)
+  target      Note     @relation("TargetEdges", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, targetId])
+  @@index([sourceId])
+  @@index([targetId])
+}
