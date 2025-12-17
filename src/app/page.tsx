@@ -7,6 +7,7 @@ import NoteDetail from "@/components/NoteDetail";
 import ThemeToggle from "@/components/ThemeToggle";
 import SearchBar from "@/components/SearchBar";
 import ExportImportModal from "@/components/ExportImportModal";
+import AuthButton from "@/components/AuthButton";
 import { GraphSkeleton } from "@/components/Skeleton";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import type { GraphData, GraphNode } from "@/types";
@@ -136,6 +137,9 @@ export default function Home() {
 
         {/* Theme Toggle */}
         <ThemeToggle />
+
+        {/* Auth Button */}
+        <AuthButton />
       </div>
 
       {/* Input Area (Centered Top) */}
