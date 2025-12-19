@@ -87,11 +87,15 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
         }
 
         // 1) Analyze + Embedding
+        console.log("[PROCESS] Starting AI analysis for note:", id);
         const analysis = await analyzeNote(baseText);
+        console.log("[PROCESS] AI analysis complete:", analysis);
 
         // Keep embedding input short & stable
         const embedInput = `Title: ${analysis.title}\nSummary: ${analysis.summary}\nTopics: ${(analysis.topics ?? []).join(", ")}`;
+        console.log("[PROCESS] Generating embedding...");
         const embedding = await generateEmbedding(embedInput);
+        console.log("[PROCESS] Embedding generated, length:", embedding.length);
 
         // 2) Update note fields (but don't overwrite good URL title)
         const shouldOverwriteTitle =
@@ -126,12 +130,31 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
         const candidates: Array<{ other: (typeof allOtherNotes)[number]; sim: number }> = [];
 
-        for (const other of allOtherNotes) {
-            const otherEmb = parseEmbedding(other.embedding);
-            if (!otherEmb) continue;
+        // Calculate topic similarity as fallback
+        const srcTopicsArray = parseTopics(noteAfterAI.topics);
 
-            const sim = clamp01(cosineSimilarity(embedding, otherEmb));
-            if (sim > 0.75) {
+        for (const other of allOtherNotes) {
+            let sim = 0;
+
+            // Try embedding similarity first
+            const otherEmb = parseEmbedding(other.embedding);
+            if (embedding.length > 0 && otherEmb && otherEmb.length > 0) {
+                sim = clamp01(cosineSimilarity(embedding, otherEmb));
+            } else {
+                // Fallback to topic similarity (Jaccard index)
+                const otherTopicsArray = parseTopics(other.topics);
+                if (srcTopicsArray.length > 0 && otherTopicsArray.length > 0) {
+                    const srcSet = new Set(srcTopicsArray.map(t => t.toLowerCase()));
+                    const otherSet = new Set(otherTopicsArray.map(t => t.toLowerCase()));
+                    const intersection = [...srcSet].filter(t => otherSet.has(t)).length;
+                    const union = new Set([...srcSet, ...otherSet]).size;
+                    sim = union > 0 ? intersection / union : 0;
+                    // Boost topic similarity for better threshold matching
+                    sim = sim * 1.2; // Topics are less granular than embeddings
+                }
+            }
+
+            if (sim > 0.3) { // Lower threshold for topic similarity
                 candidates.push({ other, sim });
             }
         }
