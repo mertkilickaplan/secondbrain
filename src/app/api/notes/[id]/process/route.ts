@@ -141,16 +141,31 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
             if (embedding.length > 0 && otherEmb && otherEmb.length > 0) {
                 sim = clamp01(cosineSimilarity(embedding, otherEmb));
             } else {
-                // Fallback to topic similarity (Jaccard index)
+                // Fallback to topic similarity with word-level matching
                 const otherTopicsArray = parseTopics(other.topics);
                 if (srcTopicsArray.length > 0 && otherTopicsArray.length > 0) {
-                    const srcSet = new Set(srcTopicsArray.map(t => t.toLowerCase()));
-                    const otherSet = new Set(otherTopicsArray.map(t => t.toLowerCase()));
-                    const intersection = [...srcSet].filter(t => otherSet.has(t)).length;
-                    const union = new Set([...srcSet, ...otherSet]).size;
+                    // Extract all words from topics for fuzzy matching
+                    const srcWords = new Set(
+                        srcTopicsArray.flatMap(t => t.toLowerCase().split(/\s+/))
+                    );
+                    const otherWords = new Set(
+                        otherTopicsArray.flatMap(t => t.toLowerCase().split(/\s+/))
+                    );
+
+                    // Count word intersections
+                    const intersection = [...srcWords].filter(w => otherWords.has(w)).length;
+                    const union = new Set([...srcWords, ...otherWords]).size;
                     sim = union > 0 ? intersection / union : 0;
-                    // Boost topic similarity for better threshold matching
-                    sim = sim * 1.2; // Topics are less granular than embeddings
+
+                    // Boost if there's direct topic containment
+                    for (const src of srcTopicsArray) {
+                        for (const other of otherTopicsArray) {
+                            if (src.toLowerCase().includes(other.toLowerCase()) ||
+                                other.toLowerCase().includes(src.toLowerCase())) {
+                                sim = Math.max(sim, 0.5); // Strong match
+                            }
+                        }
+                    }
                 }
             }
 
