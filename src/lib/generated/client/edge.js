@@ -84,6 +84,9 @@ Prisma.NullTypes = {
  * Enums
  */
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
+  ReadUncommitted: 'ReadUncommitted',
+  ReadCommitted: 'ReadCommitted',
+  RepeatableRead: 'RepeatableRead',
   Serializable: 'Serializable'
 });
 
@@ -114,6 +117,11 @@ exports.Prisma.EdgeScalarFieldEnum = {
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
 };
 
 exports.Prisma.NullsOrder = {
@@ -164,7 +172,7 @@ const config = {
   "datasourceNames": [
     "db"
   ],
-  "activeProvider": "sqlite",
+  "activeProvider": "postgresql",
   "inlineDatasources": {
     "db": {
       "url": {
@@ -173,8 +181,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/lib/generated/client\"\n}\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Note {\n  id        String   @id @default(uuid())\n  userId    String // Supabase user ID\n  content   String\n  type      String   @default(\"text\") // \"text\" | \"url\"\n  url       String?\n  title     String?\n  summary   String?\n  topics    String? // JSON string\n  tags      String? // JSON string (Manual tags)\n  embedding String? // JSON string\n  createdAt DateTime @default(now())\n  status    String   @default(\"processing\") // \"processing\" | \"ready\" | \"error\"\n\n  // Relations\n  outgoingEdges Edge[] @relation(\"SourceEdges\")\n  incomingEdges Edge[] @relation(\"TargetEdges\")\n\n  @@index([userId])\n  @@index([status])\n}\n\nmodel Edge {\n  id          String   @id @default(uuid())\n  sourceId    String\n  targetId    String\n  similarity  Float\n  explanation String\n  createdAt   DateTime @default(now())\n  source      Note     @relation(\"SourceEdges\", fields: [sourceId], references: [id], onDelete: Cascade)\n  target      Note     @relation(\"TargetEdges\", fields: [targetId], references: [id], onDelete: Cascade)\n\n  @@unique([sourceId, targetId])\n  @@index([sourceId])\n  @@index([targetId])\n}\n",
-  "inlineSchemaHash": "424b7d65a9dfbabdfe3654830ad8c62b2bac5075f56df01f8e436cc213fe1af8",
+  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/lib/generated/client\"\n}\n\ndatasource db {\n  provider  = \"postgresql\"\n  url       = env(\"DATABASE_URL\")\n  directUrl = env(\"DIRECT_URL\")\n}\n\nmodel Note {\n  id        String   @id @default(uuid())\n  userId    String // Supabase user ID\n  content   String\n  type      String   @default(\"text\") // \"text\" | \"url\"\n  url       String?\n  title     String?\n  summary   String?\n  topics    String? // JSON string\n  tags      String? // JSON string (Manual tags)\n  embedding String? // JSON string\n  createdAt DateTime @default(now())\n  status    String   @default(\"processing\") // \"processing\" | \"ready\" | \"error\"\n\n  // Relations\n  outgoingEdges Edge[] @relation(\"SourceEdges\")\n  incomingEdges Edge[] @relation(\"TargetEdges\")\n\n  @@index([userId])\n  @@index([status])\n}\n\nmodel Edge {\n  id          String   @id @default(uuid())\n  sourceId    String\n  targetId    String\n  similarity  Float\n  explanation String\n  createdAt   DateTime @default(now())\n  source      Note     @relation(\"SourceEdges\", fields: [sourceId], references: [id], onDelete: Cascade)\n  target      Note     @relation(\"TargetEdges\", fields: [targetId], references: [id], onDelete: Cascade)\n\n  @@unique([sourceId, targetId])\n  @@index([sourceId])\n  @@index([targetId])\n}\n",
+  "inlineSchemaHash": "474df8fbb45dc4e8d40312c0ec04f56dd2b98b9077091495f164e40bee66729e",
   "copyEngine": true
 }
 config.dirname = '/'
