@@ -4,10 +4,9 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import InputArea from "@/components/InputArea";
 import GraphView from "@/components/GraphView";
 import NoteDetail from "@/components/NoteDetail";
-import ThemeToggle from "@/components/ThemeToggle";
 import SearchBar from "@/components/SearchBar";
 import ExportImportModal from "@/components/ExportImportModal";
-import AuthButton from "@/components/AuthButton";
+import UserMenu from "@/components/UserMenu";
 import { GraphSkeleton } from "@/components/Skeleton";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import type { GraphData, GraphNode } from "@/types";
@@ -93,28 +92,6 @@ export default function Home() {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Export/Import Button */}
-          <button
-            onClick={() => setIsExportImportOpen(true)}
-            className="p-2 rounded-lg hover:bg-muted transition-colors flex items-center justify-center"
-            aria-label="Export/Import data"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="text-muted-foreground"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-          </button>
-
           {/* Search Button */}
           <button
             onClick={() => setIsSearchOpen(true)}
@@ -137,11 +114,30 @@ export default function Home() {
             <kbd className="hidden sm:inline text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">⌘K</kbd>
           </button>
 
-          {/* Theme Toggle */}
-          <ThemeToggle />
+          {/* Export/Import Button */}
+          <button
+            onClick={() => setIsExportImportOpen(true)}
+            className="p-2 rounded-lg hover:bg-muted transition-colors flex items-center justify-center"
+            aria-label="Export/Import data"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="text-muted-foreground"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </button>
 
-          {/* Auth Button */}
-          <AuthButton />
+          {/* User Menu (Theme + Sign Out) */}
+          <UserMenu />
         </div>
       </header>
 
