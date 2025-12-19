@@ -121,6 +121,7 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
 
 exports.Prisma.NoteScalarFieldEnum = {
   id: 'id',
+  userId: 'userId',
   content: 'content',
   type: 'type',
   url: 'url',

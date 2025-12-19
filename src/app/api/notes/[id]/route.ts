@@ -13,10 +13,13 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
 
     try {
-        // Check if note exists
+        // Check if note exists and belongs to user
         const note = await prisma.note.findUnique({ where: { id } });
         if (!note) {
             return NextResponse.json({ error: "Note not found" }, { status: 404 });
+        }
+        if (note.userId !== auth.user.id) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
         // Delete note (edges will cascade delete due to schema)
@@ -46,10 +49,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             reprocess?: boolean;
         };
 
-        // Check if note exists
+        // Check if note exists and belongs to user
         const note = await prisma.note.findUnique({ where: { id } });
         if (!note) {
             return NextResponse.json({ error: "Note not found" }, { status: 404 });
+        }
+        if (note.userId !== auth.user.id) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
         // Build update data

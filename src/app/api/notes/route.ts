@@ -49,6 +49,7 @@ export async function POST(req: Request) {
 
         const note = await prisma.note.create({
             data: {
+                userId: auth.user.id,
                 content: sanitize(type === "url" ? (content ?? "") : content!),
                 type,
                 url: type === "url" ? url : null,

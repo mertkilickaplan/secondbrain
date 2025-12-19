@@ -10,28 +10,38 @@ export async function GET() {
     if (auth.response) return auth.response;
 
     try {
-        const [nodes, edges] = await Promise.all([
-            prisma.note.findMany({
-                select: {
-                    id: true,
-                    title: true,
-                    summary: true,
-                    type: true,
-                    url: true,
-                    content: true, // MVP için OK, ama büyüyünce kaldırıp note-detail endpoint'e taşı
-                    status: true,
-                },
-            }),
-            prisma.edge.findMany({
-                select: {
-                    id: true,
-                    sourceId: true,
-                    targetId: true,
-                    similarity: true,
-                    explanation: true,
-                },
-            }),
-        ]);
+        const userId = auth.user.id;
+
+        // Get only this user's notes
+        const nodes = await prisma.note.findMany({
+            where: { userId },
+            select: {
+                id: true,
+                title: true,
+                summary: true,
+                type: true,
+                url: true,
+                content: true,
+                status: true,
+                tags: true,
+            },
+        });
+
+        // Get edges only between this user's notes
+        const nodeIds = nodes.map(n => n.id);
+        const edges = await prisma.edge.findMany({
+            where: {
+                sourceId: { in: nodeIds },
+                targetId: { in: nodeIds },
+            },
+            select: {
+                id: true,
+                sourceId: true,
+                targetId: true,
+                similarity: true,
+                explanation: true,
+            },
+        });
 
         // degree hesapla
         const degree = new Map<string, number>();

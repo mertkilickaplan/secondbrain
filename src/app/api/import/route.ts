@@ -51,6 +51,7 @@ export async function POST(req: Request) {
 
             const newNote = await prisma.note.create({
                 data: {
+                    userId: auth.user.id,
                     content: note.content || "",
                     type: note.type || "text",
                     url: note.url || null,

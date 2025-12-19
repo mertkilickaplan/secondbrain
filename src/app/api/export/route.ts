@@ -10,8 +10,11 @@ export async function GET() {
     if (auth.response) return auth.response;
 
     try {
-        // Fetch all notes with their edges
+        const userId = auth.user.id;
+
+        // Fetch only this user's notes with their edges
         const notes = await prisma.note.findMany({
+            where: { userId },
             include: {
                 outgoingEdges: true,
                 incomingEdges: true,
@@ -19,7 +22,14 @@ export async function GET() {
             orderBy: { createdAt: "asc" },
         });
 
-        const edges = await prisma.edge.findMany();
+        // Get edges only between this user's notes
+        const noteIds = notes.map(n => n.id);
+        const edges = await prisma.edge.findMany({
+            where: {
+                sourceId: { in: noteIds },
+                targetId: { in: noteIds },
+            },
+        });
 
         const exportData = {
             version: "1.0",

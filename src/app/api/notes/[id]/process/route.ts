@@ -45,6 +45,9 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
         if (!note) {
             return NextResponse.json({ error: "Note not found" }, { status: 404 });
         }
+        if (note.userId !== auth.user.id) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
 
         // Idempotency / concurrency guard:
         // - If already processing -> return 202

@@ -17,9 +17,10 @@ export async function GET(req: Request) {
             return NextResponse.json({ results: [] });
         }
 
-        // Search in title, content, summary, and topics
+        // Search in title, content, summary, and topics (only user's notes)
         const notes = await prisma.note.findMany({
             where: {
+                userId: auth.user.id,
                 OR: [
                     { title: { contains: query } },
                     { content: { contains: query } },
