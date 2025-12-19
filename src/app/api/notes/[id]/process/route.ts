@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { analyzeNote, generateEmbedding, explainConnection } from "@/lib/ai";
 import { cosineSimilarity } from "@/lib/utils";
+import { requireAuth } from "@/lib/supabase/auth";
 
 export const runtime = "nodejs";
 
@@ -33,6 +34,10 @@ function clamp01(x: number) {
 }
 
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+    // Auth check
+    const auth = await requireAuth();
+    if (auth.response) return auth.response;
+
     const { id } = await params;
 
     try {

@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/supabase/auth";
 
 export const runtime = "nodejs";
 
 export async function GET() {
+    // Auth check
+    const auth = await requireAuth();
+    if (auth.response) return auth.response;
+
     try {
         // Fetch all notes with their edges
         const notes = await prisma.note.findMany({

@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/supabase/auth";
 
 export const runtime = "nodejs";
 
 export async function GET(req: Request) {
+    // Auth check
+    const auth = await requireAuth();
+    if (auth.response) return auth.response;
+
     try {
         const { searchParams } = new URL(req.url);
         const query = searchParams.get("q")?.trim().toLowerCase();

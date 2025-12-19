@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/supabase/auth";
 
 export const runtime = "nodejs";
 
 // DELETE /api/notes/[id] - Delete a note
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+    // Auth check
+    const auth = await requireAuth();
+    if (auth.response) return auth.response;
+
     const { id } = await params;
 
     try {
@@ -26,6 +31,10 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
 
 // PATCH /api/notes/[id] - Update a note
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    // Auth check
+    const auth = await requireAuth();
+    if (auth.response) return auth.response;
+
     const { id } = await params;
 
     try {

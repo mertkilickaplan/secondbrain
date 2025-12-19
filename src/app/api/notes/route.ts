@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { fetchUrlTitle } from "@/lib/urlMetadata";
 import { noteContentSchema, validateOrError, sanitize } from "@/lib/validation";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { requireAuth } from "@/lib/supabase/auth";
 
 export const runtime = "nodejs";
 
@@ -12,6 +13,10 @@ export async function POST(req: Request) {
     if (!rateLimitResult.allowed) {
         return rateLimitResult.response;
     }
+
+    // Auth check
+    const auth = await requireAuth();
+    if (auth.response) return auth.response;
 
     try {
         const body = await req.json();

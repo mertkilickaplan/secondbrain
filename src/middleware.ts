@@ -1,6 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+// Routes that require authentication
+const protectedRoutes = ["/"];
+// Routes that should redirect to home if already authenticated
+const authRoutes = ["/login"];
+
 export async function middleware(request: NextRequest) {
     let supabaseResponse = NextResponse.next({
         request,
@@ -29,8 +34,20 @@ export async function middleware(request: NextRequest) {
         }
     );
 
-    // Refresh session if expired
-    await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
+    const path = request.nextUrl.pathname;
+
+    // Redirect unauthenticated users from protected routes to login
+    if (protectedRoutes.includes(path) && !user) {
+        const loginUrl = new URL("/login", request.url);
+        return NextResponse.redirect(loginUrl);
+    }
+
+    // Redirect authenticated users from auth routes to home
+    if (authRoutes.includes(path) && user) {
+        const homeUrl = new URL("/", request.url);
+        return NextResponse.redirect(homeUrl);
+    }
 
     return supabaseResponse;
 }

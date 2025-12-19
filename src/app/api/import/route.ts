@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/supabase/auth";
 
 export const runtime = "nodejs";
 
@@ -29,6 +30,10 @@ interface ImportData {
 }
 
 export async function POST(req: Request) {
+    // Auth check
+    const auth = await requireAuth();
+    if (auth.response) return auth.response;
+
     try {
         const data: ImportData = await req.json();
 
