@@ -79,68 +79,71 @@ export default function Home() {
   return (
     <main className="h-screen w-screen bg-background text-foreground flex flex-col overflow-hidden relative">
 
-      {/* Header / Brand (Absolute Top Left) */}
-      <div className="absolute top-2 sm:top-4 left-3 sm:left-6 z-10 pointer-events-none select-none">
-        <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
-          Second Brain Lite
-        </h1>
-        <p className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest opacity-70">
-          AI Knowledge Map
-        </p>
-      </div>
+      {/* Fixed Header Bar */}
+      <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-background/80 backdrop-blur-md border-b border-border/50 flex items-center justify-between px-3 sm:px-6">
+        {/* Left: Brand */}
+        <div className="flex flex-col">
+          <h1 className="text-base sm:text-lg font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent leading-tight">
+            Second Brain Lite
+          </h1>
+          <p className="text-[8px] sm:text-[9px] text-muted-foreground uppercase tracking-widest opacity-70">
+            AI Knowledge Map
+          </p>
+        </div>
 
-      {/* Header Buttons (Top Right) */}
-      <div className="fixed top-2 sm:top-4 right-3 sm:right-6 z-40 flex items-center gap-2">
-        {/* Export/Import Button */}
-        <button
-          onClick={() => setIsExportImportOpen(true)}
-          className="p-2 rounded-lg bg-card/80 backdrop-blur-md border border-border hover:bg-muted transition-colors flex items-center justify-center min-w-[44px] min-h-[44px]"
-          aria-label="Export/Import data"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="text-muted-foreground"
+        {/* Right: Actions */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Export/Import Button */}
+          <button
+            onClick={() => setIsExportImportOpen(true)}
+            className="p-2 rounded-lg hover:bg-muted transition-colors flex items-center justify-center"
+            aria-label="Export/Import data"
           >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-        </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="text-muted-foreground"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </button>
 
-        {/* Search Button */}
-        <button
-          onClick={() => setIsSearchOpen(true)}
-          className="p-2 rounded-lg bg-card/80 backdrop-blur-md border border-border hover:bg-muted transition-colors flex items-center gap-2 min-w-[44px] min-h-[44px] justify-center"
-          aria-label="Search notes"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="text-muted-foreground"
+          {/* Search Button */}
+          <button
+            onClick={() => setIsSearchOpen(true)}
+            className="p-2 rounded-lg hover:bg-muted transition-colors flex items-center gap-2 justify-center"
+            aria-label="Search notes"
           >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
-          <kbd className="hidden sm:inline text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">⌘K</kbd>
-        </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="text-muted-foreground"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            <kbd className="hidden sm:inline text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">⌘K</kbd>
+          </button>
 
-        {/* Theme Toggle */}
-        <ThemeToggle />
+          {/* Theme Toggle */}
+          <ThemeToggle />
 
-        {/* Auth Button */}
-        <AuthButton />
-      </div>
+          {/* Auth Button */}
+          <AuthButton />
+        </div>
+      </header>
 
       {/* Input Area (Centered Top) */}
       <InputArea onNoteAdded={handleNoteAdded} />

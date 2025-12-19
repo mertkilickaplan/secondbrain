@@ -122,7 +122,7 @@ export default function NoteDetail({ node, edges, allNodes, onClose, onDataChang
     };
 
     return (
-        <aside className="w-full sm:w-80 md:w-96 h-full border-l border-border bg-card/95 sm:bg-card/50 backdrop-blur-xl fixed sm:absolute right-0 top-0 bottom-0 shadow-2xl overflow-y-auto p-4 sm:p-6 z-30 transition-transform animate-in slide-in-from-right-10">
+        <aside className="w-full sm:w-80 md:w-96 h-[calc(100%-3.5rem)] border-l border-border bg-card/95 sm:bg-card/50 backdrop-blur-xl fixed sm:absolute right-0 top-14 bottom-0 shadow-2xl overflow-y-auto p-4 sm:p-6 z-30 transition-transform animate-in slide-in-from-right-10">
             {/* Delete Confirmation Dialog */}
             {showDeleteConfirm && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

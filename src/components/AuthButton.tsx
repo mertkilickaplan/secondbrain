@@ -54,22 +54,17 @@ export default function AuthButton() {
     }
 
     return (
-        <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-2 text-sm">
-                {user.user_metadata?.avatar_url && (
-                    <img
-                        src={user.user_metadata.avatar_url}
-                        alt="Avatar"
-                        className="w-6 h-6 rounded-full"
-                    />
-                )}
-                <span className="text-muted-foreground truncate max-w-[100px]">
-                    {user.user_metadata?.name || user.email}
-                </span>
-            </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+            {user.user_metadata?.avatar_url && (
+                <img
+                    src={user.user_metadata.avatar_url}
+                    alt="Avatar"
+                    className="w-7 h-7 rounded-full hidden sm:block"
+                />
+            )}
             <button
                 onClick={handleSignOut}
-                className="px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors text-sm"
+                className="px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors text-sm whitespace-nowrap"
             >
                 Sign Out
             </button>
