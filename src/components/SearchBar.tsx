@@ -124,24 +124,31 @@ export default function SearchBar({ onSelectNode, isOpen, onClose }: SearchBarPr
                         </div>
                     )}
 
-                    {!isLoading && results.map((result, index) => (
-                        <button
-                            key={result.id}
-                            onClick={() => {
-                                onSelectNode(result.id);
-                                onClose();
-                            }}
-                            className={`w-full text-left p-4 hover:bg-muted transition-colors border-b border-border last:border-b-0 ${index === selectedIndex ? "bg-muted" : ""
-                                }`}
-                        >
-                            <div className="font-medium text-sm mb-1">{result.title || "Untitled"}</div>
-                            {result.summary && (
-                                <p className="text-xs text-muted-foreground line-clamp-1">
-                                    {result.summary}
-                                </p>
-                            )}
-                        </button>
-                    ))}
+                    {!isLoading && results.map((result: any, index) => {
+                        // Use content snippet if title is generic
+                        const displayTitle = result.title && result.title !== "New Note" && result.title !== "Untitled"
+                            ? result.title
+                            : result.content?.slice(0, 50) + (result.content?.length > 50 ? "..." : "") || "Untitled";
+
+                        return (
+                            <button
+                                key={result.id}
+                                onClick={() => {
+                                    onSelectNode(result.id);
+                                    onClose();
+                                }}
+                                className={`w-full text-left p-4 hover:bg-muted transition-colors border-b border-border last:border-b-0 ${index === selectedIndex ? "bg-muted" : ""
+                                    }`}
+                            >
+                                <div className="font-medium text-sm mb-1">{displayTitle}</div>
+                                {result.summary && (
+                                    <p className="text-xs text-muted-foreground line-clamp-1">
+                                        {result.summary}
+                                    </p>
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
 
                 {/* Footer hint */}

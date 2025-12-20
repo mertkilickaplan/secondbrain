@@ -2,13 +2,22 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
 
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+// Use gemini-2.0-flash model
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+// Timeout helper to prevent infinite hanging
+const timeout = (ms: number) => new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error(`AI Timeout after ${ms}ms`)), ms)
+);
 
 export async function generateEmbedding(text: string): Promise<number[]> {
     // Gemini uses a different embedding model
     try {
         const embeddingModel = genAI.getGenerativeModel({ model: "embedding-001" });
-        const result = await embeddingModel.embedContent(text);
+        const result: any = await Promise.race([
+            embeddingModel.embedContent(text),
+            timeout(15000)
+        ]);
         return result.embedding.values;
     } catch (error) {
         console.warn("Embedding failed, using empty embedding:", error);
@@ -29,27 +38,26 @@ ${content}
 
 Respond ONLY with valid JSON, no markdown code blocks or additional text.`;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
-
-    // Parse JSON from response (remove potential markdown code blocks)
-    const jsonStr = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-
     try {
+        const result: any = await Promise.race([
+            model.generateContent(prompt),
+            timeout(15000)
+        ]);
+        const response = result.response;
+        const text = response.text();
+
+        // Parse JSON from response (remove potential markdown code blocks)
+        const jsonStr = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+
         const parsed = JSON.parse(jsonStr);
         return {
             summary: parsed.summary || "No summary available",
             topics: parsed.topics || [],
             title: parsed.title || "Untitled",
         };
-    } catch {
-        // Fallback if JSON parsing fails
-        return {
-            summary: "Note processed",
-            topics: ["general"],
-            title: "Note",
-        };
+    } catch (e) {
+        console.error("analyzeNote error:", e);
+        throw e; // Let the caller handle it and show in UI
     }
 }
 
@@ -66,17 +74,20 @@ ${noteB}
 
 Respond ONLY with valid JSON, no markdown code blocks or additional text.`;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
-
-    // Parse JSON from response
-    const jsonStr = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-
     try {
+        const result: any = await Promise.race([
+            model.generateContent(prompt),
+            timeout(10000)
+        ]);
+        const response = result.response;
+        const text = response.text();
+
+        // Parse JSON from response
+        const jsonStr = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
         const parsed = JSON.parse(jsonStr);
         return parsed.explanation || "Related concepts.";
     } catch {
         return "Related concepts.";
     }
 }
+

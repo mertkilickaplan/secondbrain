@@ -50,26 +50,32 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
         }
 
         // Idempotency / concurrency guard:
-        // - If already processing -> return 202
         // - If already ready -> return 200 (do nothing)
+        // - If processing AND already has analysis data -> skip (genuinely in progress)
+        // - If processing but NO analysis -> proceed (initial call after note creation)
         // - If error -> allow retry
-        if (note.status === "processing") {
+        if (note.status === "ready") {
+            return NextResponse.json({ ok: true, status: "ready", message: "Already processed" });
+        }
+
+        // Check if genuinely processing (has topics/summary already being set)
+        const hasExistingAnalysis = note.topics && note.summary;
+        if (note.status === "processing" && hasExistingAnalysis) {
             return NextResponse.json(
                 { ok: true, status: "processing", message: "Already processing" },
                 { status: 202 }
             );
         }
 
-        if (note.status === "ready") {
-            // Optional: you could still recompute edges if you want, but MVP = idempotent no-op
-            return NextResponse.json({ ok: true, status: "ready", message: "Already processed" });
-        }
+        console.log("[PROCESS] Starting processing for note:", id, "status:", note.status);
 
-        // Set processing early (so UI can reflect it + prevents double-processing)
-        await prisma.note.update({
-            where: { id },
-            data: { status: "processing" },
-        });
+        // Keep status as processing (it's already set on creation)
+        if (note.status !== "processing") {
+            await prisma.note.update({
+                where: { id },
+                data: { status: "processing" },
+            });
+        }
 
         // Build analysis input robustly for URL notes
         const baseText =
@@ -223,12 +229,18 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
         });
 
         return NextResponse.json({ ok: true, note: finalNote, edges });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error processing note:", error);
 
-        // Best-effort status update (avoid throwing if note deleted)
+        // Best-effort status update with error message visible in UI
         try {
-            await prisma.note.update({ where: { id }, data: { status: "error" } });
+            await prisma.note.update({
+                where: { id },
+                data: {
+                    status: "error",
+                    summary: `Error: ${error.message || "Unknown processing error"}`
+                }
+            });
         } catch { }
 
         return NextResponse.json({ error: "Processing Failed" }, { status: 500 });
