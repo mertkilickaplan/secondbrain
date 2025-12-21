@@ -1,21 +1,11 @@
 import { z } from "zod";
 
-// Sanitize string to prevent XSS
-export function sanitize(input: string): string {
-    return input
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#x27;");
-}
-
 // Note content validation
 export const noteContentSchema = z.object({
     content: z
         .string()
         .min(1, "Content is required")
-        .max(10000, "Content too long (max 10000 chars)")
-        .transform(sanitize),
+        .max(10000, "Content too long (max 10000 chars)"),
 });
 
 // Note update validation
@@ -24,15 +14,13 @@ export const noteUpdateSchema = z.object({
         .string()
         .min(1)
         .max(10000)
-        .transform(sanitize)
         .optional(),
     title: z
         .string()
         .max(200, "Title too long")
-        .transform(sanitize)
         .optional(),
     tags: z
-        .array(z.string().max(50).transform(sanitize))
+        .array(z.string().max(50))
         .max(20, "Too many tags")
         .optional(),
     reprocess: z.boolean().optional(),
@@ -43,8 +31,7 @@ export const searchQuerySchema = z.object({
     q: z
         .string()
         .min(2, "Query too short")
-        .max(100, "Query too long")
-        .transform(sanitize),
+        .max(100, "Query too long"),
 });
 
 // Import data validation

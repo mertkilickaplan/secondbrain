@@ -20,35 +20,84 @@ export default function GraphView({ data, onNodeClick }: GraphViewProps) {
     const graphRef = useRef<any>(null);
     const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
-    // Color mapping based on status
-    const nodeColor = useCallback((node: any) => {
-        if (node.status === "processing") return "#9ca3af"; // Gray-400
-        if (node.status === "error") return "#ef4444"; // Red-500
-        if (node.id === hoveredNode) return "#a78bfa"; // Lighter violet on hover
-        return "#8b5cf6"; // Violet-500
+    // Custom node rendering - minimalist with icons
+    const nodeCanvasObject = useCallback((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+        const label = node.title || "Untitled";
+        const fontSize = 12 / globalScale;
+        const nodeRadius = 6;
+
+        // Determine colors based on status
+        let nodeColor = "#8b5cf6"; // Violet-500
+
+        if (node.status === "processing") {
+            nodeColor = "#9ca3af";
+        } else if (node.status === "error") {
+            nodeColor = "#ef4444";
+        } else if (node.id === hoveredNode) {
+            nodeColor = "#a78bfa";
+        }
+
+        // Draw main node circle
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, nodeRadius, 0, 2 * Math.PI);
+        ctx.fillStyle = nodeColor;
+        ctx.fill();
+
+        // Draw subtle border
+        ctx.strokeStyle = node.id === hoveredNode ? "#ffffff" : "rgba(255, 255, 255, 0.2)";
+        ctx.lineWidth = 1 / globalScale;
+        ctx.stroke();
+
+        // Draw small icon
+        ctx.fillStyle = "#ffffff";
+        ctx.font = `${8 / globalScale}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        const icon = node.type === "url" ? "🔗" : "📝";
+        ctx.fillText(icon, node.x, node.y);
+
+        // Draw label (always visible but subtle)
+        ctx.font = `${fontSize}px Inter, system-ui, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        const labelY = node.y + nodeRadius + fontSize + 4 / globalScale;
+
+        // Draw label text
+        ctx.fillStyle = node.id === hoveredNode ? "#ffffff" : "rgba(255, 255, 255, 0.7)";
+        ctx.fillText(label, node.x, labelY);
+
+        // Status indicator (minimal)
+        if (node.status === "processing") {
+            ctx.fillStyle = "#fbbf24";
+            ctx.fillText("•", node.x + ctx.measureText(label).width / 2 + 6 / globalScale, labelY);
+        } else if (node.status === "error") {
+            ctx.fillStyle = "#ef4444";
+            ctx.fillText("•", node.x + ctx.measureText(label).width / 2 + 6 / globalScale, labelY);
+        }
     }, [hoveredNode]);
 
-    // Edge color - highlight connected edges on hover
+    // Edge color - subtle and clean
     const linkColor = useCallback((link: any) => {
         const sourceId = typeof link.source === "object" ? link.source.id : link.source;
         const targetId = typeof link.target === "object" ? link.target.id : link.target;
 
         if (hoveredNode && (sourceId === hoveredNode || targetId === hoveredNode)) {
-            return "rgba(139, 92, 246, 0.8)"; // Brighter on hover
+            return "rgba(139, 92, 246, 0.6)";
         }
-        return "rgba(139, 92, 246, 0.3)";
+        return "rgba(139, 92, 246, 0.2)";
     }, [hoveredNode]);
 
     // Edge width based on similarity
     const linkWidth = useCallback((link: any) => {
-        const baseWidth = (link.similarity || 0.5) * 3; // 0-3 range
+        const baseWidth = (link.similarity || 0.5) * 2;
         const sourceId = typeof link.source === "object" ? link.source.id : link.source;
         const targetId = typeof link.target === "object" ? link.target.id : link.target;
 
         if (hoveredNode && (sourceId === hoveredNode || targetId === hoveredNode)) {
-            return baseWidth + 1; // Thicker on hover
+            return baseWidth + 0.5;
         }
-        return Math.max(0.5, baseWidth);
+        return Math.max(0.3, baseWidth);
     }, [hoveredNode]);
 
     const myData = useMemo(() => {
@@ -108,14 +157,13 @@ export default function GraphView({ data, onNodeClick }: GraphViewProps) {
             <ForceGraph2D
                 ref={graphRef}
                 graphData={myData}
-                nodeLabel={(node: any) => {
-                    let label = node.title || "Untitled";
-                    if (node.status === "processing") label += " (...)";
-                    if (node.status === "error") label += " (!)";
-                    return label;
+                nodeCanvasObject={nodeCanvasObject}
+                nodePointerAreaPaint={(node: any, color: string, ctx: CanvasRenderingContext2D) => {
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, 10, 0, 2 * Math.PI);
+                    ctx.fill();
                 }}
-                nodeColor={nodeColor}
-                nodeRelSize={6}
                 linkColor={linkColor}
                 linkWidth={linkWidth}
                 linkDirectionalParticles={0}
