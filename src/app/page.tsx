@@ -13,11 +13,16 @@ import type { GraphData, GraphNode } from "@/types";
 
 export default function Home() {
   const [data, setData] = useState<GraphData>({ nodes: [], links: [] });
-  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isExportImportOpen, setIsExportImportOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Derive selected node from current data to ensure it's always up-to-date
+  const selectedNode = useMemo(() =>
+    data.nodes.find((n: any) => n.id === selectedNodeId) || null
+    , [data.nodes, selectedNodeId]);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -39,7 +44,7 @@ export default function Home() {
   }, [fetchData]);
 
   const handleNodeClick = (node: any) => {
-    setSelectedNode(node);
+    setSelectedNodeId(node.id);
     setIsSidebarOpen(true);
   };
 
@@ -49,11 +54,8 @@ export default function Home() {
   };
 
   const handleSelectNodeById = (nodeId: string) => {
-    const node = data.nodes.find((n: any) => n.id === nodeId);
-    if (node) {
-      setSelectedNode(node);
-      setIsSidebarOpen(true);
-    }
+    setSelectedNodeId(nodeId);
+    setIsSidebarOpen(true);
   };
 
   // Keyboard shortcuts handlers
@@ -176,7 +178,7 @@ export default function Home() {
       />
 
       {/* Detail Sidebar (Right Overlay) */}
-      {isSidebarOpen && (
+      {isSidebarOpen && selectedNode && (
         <NoteDetail
           node={selectedNode}
           edges={data.links}
