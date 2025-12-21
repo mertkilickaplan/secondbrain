@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { fetchUrlTitle } from "@/lib/urlMetadata";
-import { noteContentSchema, validateOrError, sanitize } from "@/lib/validation";
+import { noteContentSchema, validateOrError } from "@/lib/validation";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { requireAuth } from "@/lib/supabase/auth";
 
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
         const note = await prisma.note.create({
             data: {
                 userId: auth.user.id,
-                content: sanitize(type === "url" ? (content ?? "") : content!),
+                content: type === "url" ? (content ?? "") : content!,
                 type,
                 url: type === "url" ? url : null,
                 title: title ?? "New Note",
