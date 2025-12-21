@@ -307,15 +307,32 @@ export default function NoteDetail({ node, edges, allNodes, onClose, onDataChang
                     )}
                 </div>
 
+
                 {/* Summary */}
                 {node.summary && !isEditing && (
-                    <div className="bg-primary/10 p-3 rounded-lg border border-primary/20">
-                        <h3 className="text-xs font-semibold uppercase text-primary mb-1">AI Summary</h3>
+                    <div className={`p-3 rounded-lg ${node.status === 'error'
+                        ? 'bg-red-500/5 border-2 border-dashed border-red-500/40'
+                        : 'bg-primary/10 border border-primary/20'
+                        }`}>
+                        <div className="flex items-center gap-2 mb-2">
+                            <h3 className={`text-xs font-semibold uppercase ${node.status === 'error'
+                                ? 'text-red-500'
+                                : 'text-primary'
+                                }`}>
+                                AI Summary
+                            </h3>
+                            {node.status === 'error' && (
+                                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-red-500/20 text-red-600 dark:text-red-400 rounded">
+                                    FAILED
+                                </span>
+                            )}
+                        </div>
                         <p className="text-xs text-foreground/80 italic">
                             {node.summary}
                         </p>
                     </div>
                 )}
+
 
                 {/* Connections */}
                 {!isEditing && (
