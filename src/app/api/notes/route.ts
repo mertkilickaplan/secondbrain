@@ -59,8 +59,27 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json(note, { status: 201 });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error creating note:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+
+        // Provide user-friendly error messages
+        let userMessage = "Failed to create note";
+
+        if (error.message) {
+            const msg = error.message.toLowerCase();
+
+            if (msg.includes("unique") || msg.includes("duplicate")) {
+                userMessage = "Note already exists";
+            } else if (msg.includes("database") || msg.includes("prisma")) {
+                userMessage = "Database error - please try again";
+            } else if (msg.includes("network")) {
+                userMessage = "Network error - check your connection";
+            }
+        }
+
+        return NextResponse.json({
+            error: userMessage,
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        }, { status: 500 });
     }
 }

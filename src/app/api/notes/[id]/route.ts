@@ -26,9 +26,27 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
         await prisma.note.delete({ where: { id } });
 
         return NextResponse.json({ ok: true, message: "Note deleted" });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error deleting note:", error);
-        return NextResponse.json({ error: "Failed to delete note" }, { status: 500 });
+
+        let userMessage = "Failed to delete note";
+
+        if (error.message) {
+            const msg = error.message.toLowerCase();
+
+            if (msg.includes("not found")) {
+                userMessage = "Note not found";
+            } else if (msg.includes("database") || msg.includes("prisma")) {
+                userMessage = "Database error - please try again";
+            } else if (msg.includes("foreign key") || msg.includes("constraint")) {
+                userMessage = "Cannot delete - note has dependencies";
+            }
+        }
+
+        return NextResponse.json({
+            error: userMessage,
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        }, { status: 500 });
     }
 }
 
@@ -76,8 +94,26 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         });
 
         return NextResponse.json(updatedNote);
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error updating note:", error);
-        return NextResponse.json({ error: "Failed to update note" }, { status: 500 });
+
+        let userMessage = "Failed to update note";
+
+        if (error.message) {
+            const msg = error.message.toLowerCase();
+
+            if (msg.includes("not found")) {
+                userMessage = "Note not found";
+            } else if (msg.includes("database") || msg.includes("prisma")) {
+                userMessage = "Database error - please try again";
+            } else if (msg.includes("validation")) {
+                userMessage = "Invalid data provided";
+            }
+        }
+
+        return NextResponse.json({
+            error: userMessage,
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        }, { status: 500 });
     }
 }

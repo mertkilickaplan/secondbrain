@@ -232,17 +232,53 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     } catch (error: any) {
         console.error("Error processing note:", error);
 
-        // Best-effort status update with error message visible in UI
+        // Categorize error types for better user feedback
+        let userMessage = "Processing failed";
+        let errorCategory = "unknown";
+
+        if (error.message) {
+            const msg = error.message.toLowerCase();
+
+            if (msg.includes("api key") || msg.includes("authentication")) {
+                userMessage = "AI service configuration error";
+                errorCategory = "auth";
+            } else if (msg.includes("timeout") || msg.includes("timed out")) {
+                userMessage = "AI service timeout - please retry";
+                errorCategory = "timeout";
+            } else if (msg.includes("quota") || msg.includes("rate limit")) {
+                userMessage = "AI service quota exceeded - try again later";
+                errorCategory = "quota";
+            } else if (msg.includes("network") || msg.includes("fetch")) {
+                userMessage = "Network error - check your connection";
+                errorCategory = "network";
+            } else if (msg.includes("not found") || msg.includes("404")) {
+                userMessage = "AI model not available";
+                errorCategory = "model";
+            } else {
+                userMessage = "AI processing failed - please retry";
+                errorCategory = "processing";
+            }
+        }
+
+        // Update note status with user-friendly error message
         try {
             await prisma.note.update({
                 where: { id },
                 data: {
                     status: "error",
-                    summary: `Error: ${error.message || "Unknown processing error"}`
+                    summary: userMessage
                 }
             });
-        } catch { }
+        } catch (dbError) {
+            console.error("Failed to update note status:", dbError);
+        }
 
-        return NextResponse.json({ error: "Processing Failed" }, { status: 500 });
+        // Return detailed error in development, generic in production
+        return NextResponse.json({
+            error: userMessage,
+            category: errorCategory,
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+            retryable: ["timeout", "network", "quota"].includes(errorCategory)
+        }, { status: 500 });
     }
 }
