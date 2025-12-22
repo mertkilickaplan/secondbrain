@@ -162,9 +162,14 @@ export default function SearchBar({ onSelectNode, isOpen, onClose }: SearchBarPr
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Search notes..."
+                        placeholder={query.startsWith('#') ? "Search by tag..." : "Search notes... (use # for tags)"}
                         className="flex-1 bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
                     />
+                    {query.startsWith('#') && (
+                        <span className="text-xs px-2 py-1 bg-primary/20 text-primary rounded">
+                            🏷️ Tag Search
+                        </span>
+                    )}
                     <kbd className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">ESC</kbd>
                 </div>
 
