@@ -174,6 +174,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -182,8 +183,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/lib/generated/client\"\n}\n\ndatasource db {\n  provider  = \"postgresql\"\n  url       = env(\"DATABASE_URL\")\n  directUrl = env(\"DIRECT_URL\")\n}\n\nmodel Note {\n  id        String   @id @default(uuid())\n  userId    String // Supabase user ID\n  content   String\n  type      String   @default(\"text\") // \"text\" | \"url\"\n  url       String?\n  title     String?\n  summary   String?\n  topics    String? // JSON string\n  tags      String? // JSON string (Manual tags)\n  embedding String? // JSON string\n  createdAt DateTime @default(now())\n  status    String   @default(\"processing\") // \"processing\" | \"ready\" | \"error\"\n\n  // Relations\n  outgoingEdges Edge[] @relation(\"SourceEdges\")\n  incomingEdges Edge[] @relation(\"TargetEdges\")\n\n  @@index([userId])\n  @@index([status])\n}\n\nmodel Edge {\n  id          String   @id @default(uuid())\n  sourceId    String\n  targetId    String\n  similarity  Float\n  explanation String\n  createdAt   DateTime @default(now())\n  source      Note     @relation(\"SourceEdges\", fields: [sourceId], references: [id], onDelete: Cascade)\n  target      Note     @relation(\"TargetEdges\", fields: [targetId], references: [id], onDelete: Cascade)\n\n  @@unique([sourceId, targetId])\n  @@index([sourceId])\n  @@index([targetId])\n}\n",
-  "inlineSchemaHash": "474df8fbb45dc4e8d40312c0ec04f56dd2b98b9077091495f164e40bee66729e",
+  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/lib/generated/client\"\n}\n\ndatasource db {\n  provider  = \"postgresql\"\n  url       = env(\"DATABASE_URL\")\n  directUrl = env(\"DIRECT_URL\")\n}\n\nmodel Note {\n  id        String   @id @default(uuid())\n  userId    String // Supabase user ID\n  content   String\n  type      String   @default(\"text\") // \"text\" | \"url\"\n  url       String?\n  title     String?\n  summary   String?\n  topics    String? // JSON string\n  tags      String? // JSON string (Manual tags)\n  embedding String? // JSON string\n  createdAt DateTime @default(now())\n  status    String   @default(\"processing\") // \"processing\" | \"ready\" | \"error\"\n\n  // Full-text search vector (managed by PostgreSQL trigger)\n  search_vector Unsupported(\"tsvector\")?\n\n  // Relations\n  outgoingEdges Edge[] @relation(\"SourceEdges\")\n  incomingEdges Edge[] @relation(\"TargetEdges\")\n\n  @@index([userId])\n  @@index([status])\n}\n\nmodel Edge {\n  id          String   @id @default(uuid())\n  sourceId    String\n  targetId    String\n  similarity  Float\n  explanation String\n  createdAt   DateTime @default(now())\n  source      Note     @relation(\"SourceEdges\", fields: [sourceId], references: [id], onDelete: Cascade)\n  target      Note     @relation(\"TargetEdges\", fields: [targetId], references: [id], onDelete: Cascade)\n\n  @@unique([sourceId, targetId])\n  @@index([sourceId])\n  @@index([targetId])\n}\n",
+  "inlineSchemaHash": "6db6d9d9056b97663df00ed821a9c011e76d570df6562072ae8d1b2da7ba842d",
   "copyEngine": true
 }
 

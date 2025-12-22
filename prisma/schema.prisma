@@ -22,6 +22,9 @@ model Note {
   embedding String?  // JSON string
   createdAt DateTime @default(now())
   status    String   @default("processing") // "processing" | "ready" | "error"
+  
+  // Full-text search vector (managed by PostgreSQL trigger)
+  search_vector Unsupported("tsvector")?
 
   // Relations
   outgoingEdges Edge[] @relation("SourceEdges")

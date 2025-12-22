@@ -7,6 +7,9 @@ interface SearchResult {
     title: string;
     summary: string | null;
     status: string;
+    snippet?: string;  // Highlighted snippet from PostgreSQL
+    rank?: number;     // Relevance score
+    type?: string;     // Note type
 }
 
 interface SearchBarProps {
@@ -15,12 +18,33 @@ interface SearchBarProps {
     onClose: () => void;
 }
 
+// Highlight search terms in text
+function highlightText(text: string, query: string): string {
+    if (!text || !query) return text;
+
+    // Split query into words and create regex
+    const words = query.trim().split(/\s+/).filter(w => w.length > 0);
+    if (words.length === 0) return text;
+
+    const regex = new RegExp(`(${words.join('|')})`, 'gi');
+    return text.replace(regex, '<mark class="bg-yellow-300 dark:bg-yellow-600 px-0.5 rounded">$1</mark>');
+}
+
 export default function SearchBar({ onSelectNode, isOpen, onClose }: SearchBarProps) {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<SearchResult[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    // Filter state
+    const [selectedTag, setSelectedTag] = useState<string>("");
+    const [selectedStatus, setSelectedStatus] = useState<string>("");
+    const [selectedType, setSelectedType] = useState<string>("");
+    const [availableTags, setAvailableTags] = useState<string[]>([]);
+
+    // Search history
+    const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
     // Focus input when opened
     useEffect(() => {
@@ -31,6 +55,24 @@ export default function SearchBar({ onSelectNode, isOpen, onClose }: SearchBarPr
             setQuery("");
             setResults([]);
             setSelectedIndex(0);
+        } else {
+            // Fetch available tags when opened
+            const fetchTags = async () => {
+                try {
+                    const res = await fetch('/api/tags');
+                    if (res.ok) {
+                        const data = await res.json();
+                        setAvailableTags(data.tags || []);
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch tags:', e);
+                }
+            };
+            fetchTags();
+
+            // Load search history
+            const history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+            setSearchHistory(history);
         }
     }, [isOpen]);
 
@@ -44,7 +86,13 @@ export default function SearchBar({ onSelectNode, isOpen, onClose }: SearchBarPr
         const timer = setTimeout(async () => {
             setIsLoading(true);
             try {
-                const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                // Build query string with filters
+                const params = new URLSearchParams({ q: query });
+                if (selectedTag) params.append('tag', selectedTag);
+                if (selectedStatus) params.append('status', selectedStatus);
+                if (selectedType) params.append('type', selectedType);
+
+                const res = await fetch(`/api/search?${params.toString()}`);
                 if (res.ok) {
                     const data = await res.json();
                     setResults(data.results || []);
@@ -58,7 +106,16 @@ export default function SearchBar({ onSelectNode, isOpen, onClose }: SearchBarPr
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [query]);
+    }, [query, selectedTag, selectedStatus, selectedType]);
+
+    const saveToHistory = (searchQuery: string) => {
+        if (searchQuery.length < 2) return;
+
+        const history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+        const updated = [searchQuery, ...history.filter((q: string) => q !== searchQuery)].slice(0, 10);
+        localStorage.setItem('searchHistory', JSON.stringify(updated));
+        setSearchHistory(updated);
+    };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Escape") {
@@ -71,6 +128,7 @@ export default function SearchBar({ onSelectNode, isOpen, onClose }: SearchBarPr
             setSelectedIndex((prev) => Math.max(prev - 1, 0));
         } else if (e.key === "Enter" && results[selectedIndex]) {
             onSelectNode(results[selectedIndex].id);
+            saveToHistory(query);
             onClose();
         }
     };
@@ -110,6 +168,56 @@ export default function SearchBar({ onSelectNode, isOpen, onClose }: SearchBarPr
                     <kbd className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">ESC</kbd>
                 </div>
 
+                {/* Filters */}
+                <div className="flex gap-2 p-3 border-b border-border bg-muted/30">
+                    <select
+                        value={selectedTag}
+                        onChange={(e) => setSelectedTag(e.target.value)}
+                        className="text-xs px-2 py-1.5 bg-card border border-border rounded outline-none focus:ring-1 focus:ring-primary"
+                    >
+                        <option value="">All Tags</option>
+                        {availableTags.map(tag => (
+                            <option key={tag} value={tag}>#{tag}</option>
+                        ))}
+                    </select>
+
+                    <select
+                        value={selectedStatus}
+                        onChange={(e) => setSelectedStatus(e.target.value)}
+                        className="text-xs px-2 py-1.5 bg-card border border-border rounded outline-none focus:ring-1 focus:ring-primary"
+                    >
+                        <option value="">All Status</option>
+                        <option value="ready">✅ Ready</option>
+                        <option value="processing">⏳ Processing</option>
+                        <option value="error">❌ Error</option>
+                    </select>
+
+                    <select
+                        value={selectedType}
+                        onChange={(e) => setSelectedType(e.target.value)}
+                        className="text-xs px-2 py-1.5 bg-card border border-border rounded outline-none focus:ring-1 focus:ring-primary"
+                    >
+                        <option value="">All Types</option>
+                        <option value="text">📝 Text</option>
+                        <option value="url">🔗 URL</option>
+                    </select>
+
+                    {/* Clear filters button */}
+                    {(selectedTag || selectedStatus || selectedType) && (
+                        <button
+                            onClick={() => {
+                                setSelectedTag("");
+                                setSelectedStatus("");
+                                setSelectedType("");
+                            }}
+                            className="text-xs px-2 py-1.5 bg-card border border-border rounded hover:bg-muted transition-colors"
+                            title="Clear filters"
+                        >
+                            ✕
+                        </button>
+                    )}
+                </div>
+
                 {/* Results */}
                 <div className="max-h-80 overflow-y-auto">
                     {isLoading && (
@@ -124,8 +232,24 @@ export default function SearchBar({ onSelectNode, isOpen, onClose }: SearchBarPr
                         </div>
                     )}
 
+                    {/* Search History */}
+                    {!isLoading && query.length === 0 && searchHistory.length > 0 && (
+                        <div className="p-3">
+                            <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-1">Recent Searches</h3>
+                            {searchHistory.map((historyQuery, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setQuery(historyQuery)}
+                                    className="w-full text-left px-3 py-2 text-sm hover:bg-muted rounded transition-colors flex items-center gap-2"
+                                >
+                                    <span className="text-muted-foreground">🕐</span>
+                                    {historyQuery}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
                     {!isLoading && results.map((result: any, index) => {
-                        // Use content snippet if title is generic
                         const displayTitle = result.title && result.title !== "New Note" && result.title !== "Untitled"
                             ? result.title
                             : result.content?.slice(0, 50) + (result.content?.length > 50 ? "..." : "") || "Untitled";
@@ -135,17 +259,43 @@ export default function SearchBar({ onSelectNode, isOpen, onClose }: SearchBarPr
                                 key={result.id}
                                 onClick={() => {
                                     onSelectNode(result.id);
+                                    saveToHistory(query);
                                     onClose();
                                 }}
                                 className={`w-full text-left p-4 hover:bg-muted transition-colors border-b border-border last:border-b-0 ${index === selectedIndex ? "bg-muted" : ""
                                     }`}
                             >
-                                <div className="font-medium text-sm mb-1">{displayTitle}</div>
-                                {result.summary && (
-                                    <p className="text-xs text-muted-foreground line-clamp-1">
-                                        {result.summary}
-                                    </p>
+                                {/* Title with highlighting */}
+                                <div
+                                    className="font-medium text-sm mb-1"
+                                    dangerouslySetInnerHTML={{
+                                        __html: highlightText(displayTitle, query)
+                                    }}
+                                />
+
+                                {/* Snippet or summary with highlighting */}
+                                {(result.snippet || result.summary) && (
+                                    <p
+                                        className="text-xs text-muted-foreground line-clamp-2"
+                                        dangerouslySetInnerHTML={{
+                                            __html: result.snippet || highlightText(result.summary, query)
+                                        }}
+                                    />
                                 )}
+
+                                {/* Type badge and relevance score */}
+                                <div className="flex items-center gap-2 mt-1">
+                                    {result.type && (
+                                        <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded">
+                                            {result.type === 'url' ? '🔗 URL' : '📝 Text'}
+                                        </span>
+                                    )}
+                                    {process.env.NODE_ENV === 'development' && result.rank && (
+                                        <span className="text-[10px] text-muted-foreground">
+                                            Score: {result.rank.toFixed(3)}
+                                        </span>
+                                    )}
+                                </div>
                             </button>
                         );
                     })}
