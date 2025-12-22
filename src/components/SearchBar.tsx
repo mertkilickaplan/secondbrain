@@ -278,15 +278,20 @@ export default function SearchBar({ onSelectNode, isOpen, onClose }: SearchBarPr
                                     }}
                                 />
 
-                                {/* Snippet or summary with highlighting */}
-                                {(result.snippet || result.summary) && (
+
+                                {/* Snippet or content preview */}
+                                {(result.snippet || result.content) && (
                                     <p
                                         className="text-xs text-muted-foreground line-clamp-2"
                                         dangerouslySetInnerHTML={{
-                                            __html: result.snippet || highlightText(result.summary, query)
+                                            __html: result.snippet || highlightText(
+                                                result.content?.slice(0, 150) || '',
+                                                query
+                                            )
                                         }}
                                     />
                                 )}
+
 
                                 {/* Type badge and relevance score */}
                                 <div className="flex items-center gap-2 mt-1">
