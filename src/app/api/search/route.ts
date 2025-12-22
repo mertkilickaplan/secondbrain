@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/supabase/auth";
 import { SearchResult, SearchResponse } from "@/types/api";
 import { ApiError, createAuthError, createDatabaseError, createValidationError, handleUnknownError } from "@/lib/api-error";
+import { normalizeTurkish, hasTurkishCharacters } from "@/lib/turkish-utils";
 
 export const runtime = "nodejs";
 
@@ -116,6 +117,37 @@ export async function GET(req: Request) {
                 );
             }
 
+            // If no results and query has Turkish characters, try with normalized query
+            if (notes.length === 0 && hasTurkishCharacters(searchTerm)) {
+                const normalizedTerm = normalizeTurkish(searchTerm);
+                if (normalizedTerm !== searchTerm) {
+                    try {
+                        notes = await prisma.$queryRawUnsafe<SearchResult[]>(`
+                            SELECT 
+                                id,
+                                title,
+                                summary,
+                                status,
+                                type,
+                                ts_rank(search_vector, plainto_tsquery('english', $1)) as rank,
+                                ts_headline('english', 
+                                    COALESCE(title, '') || ' ' || COALESCE(content, ''), 
+                                    plainto_tsquery('english', $1),
+                                    'MaxWords=20, MinWords=10, ShortWord=3, HighlightAll=false'
+                                ) as snippet
+                            FROM "Note"
+                            WHERE ${whereClause}
+                              AND search_vector @@ plainto_tsquery('english', $1)
+                            ORDER BY rank DESC
+                            LIMIT 10
+                        `, normalizedTerm);
+                    } catch (normalizedError) {
+                        // If normalized search also fails, continue with empty results
+                        console.warn("Normalized FTS failed:", normalizedError);
+                    }
+                }
+            }
+
             // If we have few results, try fuzzy search for typo tolerance
             if (notes.length < 3) {
                 try {
@@ -146,6 +178,40 @@ export async function GET(req: Request) {
                 } catch (fuzzyError) {
                     // Fuzzy search failed, continue with FTS results only
                     console.warn("Fuzzy search failed:", fuzzyError);
+                }
+
+                // If still few results and has Turkish characters, try fuzzy with normalized
+                if (notes.length < 3 && hasTurkishCharacters(searchTerm)) {
+                    const normalizedTerm = normalizeTurkish(searchTerm);
+                    if (normalizedTerm !== searchTerm) {
+                        try {
+                            const normalizedFuzzyNotes = await prisma.$queryRawUnsafe<SearchResult[]>(`
+                                SELECT 
+                                    id, title, summary, status, type,
+                                    GREATEST(
+                                        similarity(COALESCE(title, ''), $1),
+                                        similarity(COALESCE(content, ''), $1)
+                                    ) as similarity
+                                FROM "Note"
+                                WHERE ${whereClause}
+                                  AND (
+                                    title % $1 OR 
+                                    content % $1
+                                  )
+                                  AND id NOT IN (${notes.map(n => `'${n.id}'`).join(',') || "''"})
+                                ORDER BY similarity DESC
+                                LIMIT ${10 - notes.length}
+                            `, normalizedTerm);
+
+                            normalizedFuzzyNotes.forEach(note => {
+                                note.rank = (note as unknown as { similarity: number }).similarity * 0.5;
+                            });
+
+                            notes.push(...normalizedFuzzyNotes);
+                        } catch (normalizedFuzzyError) {
+                            console.warn("Normalized fuzzy search failed:", normalizedFuzzyError);
+                        }
+                    }
                 }
             }
         }
