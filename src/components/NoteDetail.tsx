@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/contexts/ToastContext";
 
 interface NoteDetailProps {
@@ -23,9 +23,46 @@ export default function NoteDetail({ node, edges, allNodes, onClose, onDataChang
     const [newTag, setNewTag] = useState("");
     const [isSaving, setIsSaving] = useState(false);
 
+    // Tag autocomplete state
+    const [availableTags, setAvailableTags] = useState<string[]>([]);
+    const [showTagDropdown, setShowTagDropdown] = useState(false);
+    const [filteredTags, setFilteredTags] = useState<string[]>([]);
+    const [selectedTagIndex, setSelectedTagIndex] = useState(-1);
+
     // Initialize tags when entering edit mode or node changes
     /* eslint-disable react-hooks/exhaustive-deps */
     const tags = node?.tags ? JSON.parse(node.tags) : [];
+
+    // Fetch available tags on mount
+    useEffect(() => {
+        const fetchTags = async () => {
+            try {
+                const res = await fetch('/api/tags');
+                if (res.ok) {
+                    const data = await res.json();
+                    setAvailableTags(data.tags || []);
+                }
+            } catch (error) {
+                console.error('Failed to fetch tags:', error);
+            }
+        };
+        fetchTags();
+    }, []);
+
+    // Filter tags based on input and exclude already added tags
+    useEffect(() => {
+        if (!newTag.trim()) {
+            const filtered = availableTags.filter(tag => !editTags.includes(tag));
+            setFilteredTags(filtered);
+        } else {
+            const filtered = availableTags.filter(tag =>
+                tag.toLowerCase().includes(newTag.toLowerCase()) &&
+                !editTags.includes(tag)
+            );
+            setFilteredTags(filtered);
+        }
+        setSelectedTagIndex(-1);
+    }, [newTag, availableTags, editTags]);
 
     if (!node) return null;
 
@@ -79,10 +116,34 @@ export default function NoteDetail({ node, edges, allNodes, onClose, onDataChang
         setEditTags(editTags.filter(t => t !== tagToRemove));
     };
 
+    const handleSelectTag = (tag: string) => {
+        if (!editTags.includes(tag)) {
+            setEditTags([...editTags, tag]);
+        }
+        setNewTag("");
+        setShowTagDropdown(false);
+        setSelectedTagIndex(-1);
+    };
+
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Enter") {
             e.preventDefault();
-            handleAddTag();
+            if (selectedTagIndex >= 0 && filteredTags[selectedTagIndex]) {
+                handleSelectTag(filteredTags[selectedTagIndex]);
+            } else {
+                handleAddTag();
+            }
+        } else if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setSelectedTagIndex(prev =>
+                prev < filteredTags.length - 1 ? prev + 1 : prev
+            );
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setSelectedTagIndex(prev => prev > 0 ? prev - 1 : -1);
+        } else if (e.key === "Escape") {
+            setShowTagDropdown(false);
+            setSelectedTagIndex(-1);
         }
     };
 
@@ -233,16 +294,36 @@ export default function NoteDetail({ node, edges, allNodes, onClose, onDataChang
                                     </span>
                                 ))}
                             </div>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={newTag}
-                                    onChange={(e) => setNewTag(e.target.value)}
-                                    onKeyDown={handleKeyDown}
-                                    className="flex-1 text-sm bg-muted/50 border border-border rounded-lg px-3 py-1.5 outline-none focus:ring-1 focus:ring-primary"
-                                    placeholder="Add tag..."
-                                />
-                                <button onClick={handleAddTag} className="text-xs px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-lg transition-colors">Add</button>
+                            <div className="relative">
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={newTag}
+                                        onChange={(e) => setNewTag(e.target.value)}
+                                        onKeyDown={handleKeyDown}
+                                        onFocus={() => setShowTagDropdown(true)}
+                                        onBlur={() => setTimeout(() => setShowTagDropdown(false), 200)}
+                                        className="flex-1 text-sm bg-muted/50 border border-border rounded-lg px-3 py-1.5 outline-none focus:ring-1 focus:ring-primary"
+                                        placeholder="Add tag..."
+                                    />
+                                    <button onClick={handleAddTag} className="text-xs px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-lg transition-colors">Add</button>
+                                </div>
+
+                                {/* Tag Dropdown */}
+                                {showTagDropdown && filteredTags.length > 0 && (
+                                    <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                        {filteredTags.map((tag, index) => (
+                                            <button
+                                                key={tag}
+                                                onClick={() => handleSelectTag(tag)}
+                                                className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors ${index === selectedTagIndex ? 'bg-muted' : ''
+                                                    }`}
+                                            >
+                                                #{tag}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ) : (
