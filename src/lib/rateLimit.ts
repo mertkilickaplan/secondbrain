@@ -1,5 +1,23 @@
-// Simple in-memory rate limiter (IP-based)
-// For production, use Redis or a proper rate limiter
+/**
+ * Simple in-memory rate limiter (IP-based)
+ * 
+ * ⚠️ PRODUCTION NOTE:
+ * This in-memory implementation works for single-server deployments.
+ * For serverless (Vercel) or multi-instance deployments, upgrade to:
+ * - Upstash Redis (@upstash/ratelimit)
+ * - Redis with ioredis
+ * 
+ * Example Upstash integration:
+ * ```
+ * import { Ratelimit } from "@upstash/ratelimit";
+ * import { Redis } from "@upstash/redis";
+ * 
+ * const ratelimit = new Ratelimit({
+ *   redis: Redis.fromEnv(),
+ *   limiter: Ratelimit.slidingWindow(100, "1 m"),
+ * });
+ * ```
+ */
 
 interface RateLimitEntry {
     count: number;

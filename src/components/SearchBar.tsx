@@ -18,16 +18,72 @@ interface SearchBarProps {
     onClose: () => void;
 }
 
-// Highlight search terms in text
-function highlightText(text: string, query: string): string {
-    if (!text || !query) return text;
+// Escape regex special characters to prevent regex injection
+function escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
-    // Split query into words and create regex
+// Escape HTML to prevent XSS
+function escapeHtml(str: string): string {
+    const htmlEscapes: Record<string, string> = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    };
+    return str.replace(/[&<>"']/g, char => htmlEscapes[char] || char);
+}
+
+// Safe highlight component - no dangerouslySetInnerHTML
+function HighlightedText({ text, query, className }: { text: string; query: string; className?: string }) {
+    if (!text || !query) {
+        return <span className={className}>{text}</span>;
+    }
+
+    // Split query into words and escape each
     const words = query.trim().split(/\s+/).filter(w => w.length > 0);
-    if (words.length === 0) return text;
+    if (words.length === 0) {
+        return <span className={className}>{text}</span>;
+    }
 
-    const regex = new RegExp(`(${words.join('|')})`, 'gi');
-    return text.replace(regex, '<mark class="bg-yellow-300 dark:bg-yellow-600 px-0.5 rounded">$1</mark>');
+    // Create regex with escaped words
+    const escapedWords = words.map(escapeRegex);
+    const regex = new RegExp(`(${escapedWords.join('|')})`, 'gi');
+
+    // Split text by matches
+    const parts = text.split(regex);
+
+    return (
+        <span className={className}>
+            {parts.map((part, i) => {
+                const isMatch = words.some(w =>
+                    part.toLowerCase() === w.toLowerCase()
+                );
+                return isMatch ? (
+                    <mark key={i} className="bg-yellow-300 dark:bg-yellow-600 px-0.5 rounded">
+                        {part}
+                    </mark>
+                ) : (
+                    <span key={i}>{part}</span>
+                );
+            })}
+        </span>
+    );
+}
+
+// Legacy function for snippet HTML from PostgreSQL (already escaped by DB)
+function highlightText(text: string, query: string): string {
+    if (!text || !query) return escapeHtml(text || '');
+
+    const words = query.trim().split(/\s+/).filter(w => w.length > 0);
+    if (words.length === 0) return escapeHtml(text);
+
+    // Escape HTML first, then add highlight marks
+    const escaped = escapeHtml(text);
+    const escapedWords = words.map(escapeRegex);
+    const regex = new RegExp(`(${escapedWords.join('|')})`, 'gi');
+    return escaped.replace(regex, '<mark class="bg-yellow-300 dark:bg-yellow-600 px-0.5 rounded">$1</mark>');
 }
 
 export default function SearchBar({ onSelectNode, isOpen, onClose }: SearchBarProps) {
@@ -270,12 +326,11 @@ export default function SearchBar({ onSelectNode, isOpen, onClose }: SearchBarPr
                                 className={`w-full text-left p-4 hover:bg-muted transition-colors border-b border-border last:border-b-0 ${index === selectedIndex ? "bg-muted" : ""
                                     }`}
                             >
-                                {/* Title with highlighting */}
-                                <div
-                                    className="font-medium text-sm mb-1"
-                                    dangerouslySetInnerHTML={{
-                                        __html: highlightText(displayTitle, query)
-                                    }}
+                                {/* Title with safe highlighting */}
+                                <HighlightedText
+                                    text={displayTitle}
+                                    query={query}
+                                    className="font-medium text-sm mb-1 block"
                                 />
 
 

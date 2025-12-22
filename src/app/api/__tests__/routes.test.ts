@@ -28,6 +28,8 @@ jest.mock("@/lib/db", () => ({
             findMany: jest.fn(),
             create: jest.fn(),
         },
+        // For search API which uses raw SQL
+        $queryRawUnsafe: jest.fn(),
     },
 }));
 
@@ -187,20 +189,16 @@ describe("API Routes", () => {
                 user: { id: "user-123" } as any,
             } as any);
 
-            (mockPrisma.note.findMany as jest.Mock).mockResolvedValue([
+            // Search API uses $queryRawUnsafe for contains search
+            (mockPrisma.$queryRawUnsafe as jest.Mock).mockResolvedValue([
                 {
                     id: "note-1",
-                    userId: "user-123",
                     title: "Test Note",
                     summary: "Test summary",
                     status: "ready",
                     content: "Test content",
                     type: "text",
-                    url: null,
-                    tags: null,
-                    topics: null,
-                    embedding: null,
-                    createdAt: new Date(),
+                    rank: 1.0,
                 },
             ]);
 
