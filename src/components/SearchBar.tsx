@@ -295,7 +295,7 @@ export default function SearchBar({ onSelectNode, isOpen, onClose }: SearchBarPr
                                             {result.type === 'url' ? '🔗 URL' : '📝 Text'}
                                         </span>
                                     )}
-                                    {process.env.NODE_ENV === 'development' && result.rank && (
+                                    {process.env.NODE_ENV === 'development' && result.rank && typeof result.rank === 'number' && (
                                         <span className="text-[10px] text-muted-foreground">
                                             Score: {result.rank.toFixed(3)}
                                         </span>
