@@ -40,6 +40,7 @@ const NoteHeader: React.FC<NoteHeaderProps> = ({
                 )}
                 <button
                     onClick={onClose}
+                    aria-label="Close note details"
                     className="text-muted-foreground hover:text-foreground flex-shrink-0"
                 >
                     ✕

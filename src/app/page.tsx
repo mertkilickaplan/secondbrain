@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
+import dynamic from "next/dynamic";
 import InputArea from "@/components/InputArea";
-import GraphView from "@/components/GraphView";
 import NoteDetail from "@/components/NoteDetail";
 import SearchBar from "@/components/SearchBar";
 import ExportImportModal from "@/components/ExportImportModal";
@@ -10,6 +10,12 @@ import UserMenu from "@/components/UserMenu";
 import { GraphSkeleton } from "@/components/Skeleton";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import type { GraphData, GraphNode } from "@/types";
+
+// Dynamic import for GraphView (heavy component with force-graph library)
+const GraphView = dynamic(() => import("@/components/GraphView"), {
+  loading: () => <GraphSkeleton />,
+  ssr: false, // Graph doesn't need server-side rendering
+});
 
 export default function Home() {
   const [data, setData] = useState<GraphData>({ nodes: [], links: [] });
