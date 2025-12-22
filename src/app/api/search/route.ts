@@ -61,6 +61,7 @@ export async function GET(req: Request) {
                     SELECT 
                         id,
                         title,
+                        content,
                         summary,
                         status,
                         type,
