@@ -147,7 +147,6 @@ export async function GET(req: Request) {
                     ORDER BY rank DESC
                     LIMIT 10
                 `, searchTerm);
-                );
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
 
