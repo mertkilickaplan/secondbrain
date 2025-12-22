@@ -81,8 +81,8 @@ export async function GET(req: Request) {
                 );
             }
         } else {
-            // Prefix search for short queries (2-3 characters) for instant results
-            if (searchTerm.length >= 2 && searchTerm.length < 4) {
+            // Prefix search for short queries (2-4 characters) for instant results
+            if (searchTerm.length >= 2 && searchTerm.length <= 4) {
                 try {
                     // Try prefix match with original query
                     notes = await prisma.$queryRawUnsafe<SearchResult[]>(`
@@ -126,8 +126,8 @@ export async function GET(req: Request) {
                 }
             }
 
-            // Full-text search for longer queries (4+ chars) or if prefix had no results
-            if (notes.length === 0 && searchTerm.length >= 4) {
+            // Full-text search for longer queries (5+ chars) or if prefix had no results
+            if (notes.length === 0 && searchTerm.length >= 5) {
                 try {
                     notes = await prisma.$queryRawUnsafe<SearchResult[]>(`
                     SELECT 
