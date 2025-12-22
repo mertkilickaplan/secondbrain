@@ -68,17 +68,7 @@ const NoteHeader: React.FC<NoteHeaderProps> = ({
                 </div>
             )}
 
-            {/* Status Badge */}
-            {status && (
-                <div className="mb-4">
-                    <Badge
-                        variant={status === 'ready' ? 'success' : status === 'failed' ? 'destructive' : 'default'}
-                        size="sm"
-                    >
-                        {status}
-                    </Badge>
-                </div>
-            )}
+
         </>
     );
 };
