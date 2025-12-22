@@ -1,0 +1,114 @@
+import React from 'react';
+import { Button } from '@/components/ui';
+
+interface NoteContentProps {
+    content: string;
+    summary: string | null;
+    isEditing: boolean;
+    editContent: string;
+    isSaving: boolean;
+    status: string;
+    isRetrying: boolean;
+    onContentChange: (content: string) => void;
+    onSave: (reprocess: boolean) => void;
+    onCancel: () => void;
+    onRetry: () => void;
+}
+
+const NoteContent: React.FC<NoteContentProps> = ({
+    content,
+    summary,
+    isEditing,
+    editContent,
+    isSaving,
+    status,
+    isRetrying,
+    onContentChange,
+    onSave,
+    onCancel,
+    onRetry,
+}) => {
+    return (
+        <div>
+            {/* Status Indicators */}
+            {(status === "processing" || isRetrying) && (
+                <div className="mb-4 bg-muted/50 p-3 rounded-lg border border-border animate-pulse">
+                    <p className="text-xs text-center font-medium">
+                        {isRetrying ? "Retrying analysis..." : "AI is processing this note..."}
+                    </p>
+                </div>
+            )}
+
+            {status === "error" && !isRetrying && (
+                <div className="mb-4 bg-destructive/10 p-3 rounded-lg border border-destructive/20">
+                    <p className="text-xs text-destructive font-medium mb-2">AI processing failed.</p>
+                    <button
+                        onClick={onRetry}
+                        className="w-full text-xs bg-destructive/20 hover:bg-destructive/30 text-destructive py-1.5 rounded transition-colors"
+                    >
+                        Retry Processing
+                    </button>
+                </div>
+            )}
+
+            <h3 className="text-xs font-semibold uppercase text-muted-foreground mb-2">My Note</h3>
+
+            {isEditing ? (
+                <>
+                    <textarea
+                        value={editContent}
+                        onChange={(e) => onContentChange(e.target.value)}
+                        className="w-full text-sm bg-muted/50 border border-border rounded-lg p-3 outline-none focus:ring-2 focus:ring-primary/50 resize-none min-h-[100px]"
+                        placeholder="Note content..."
+                    />
+                    <div className="flex gap-2 mt-3">
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={onCancel}
+                            disabled={isSaving}
+                            className="flex-1"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => onSave(false)}
+                            disabled={isSaving}
+                            className="flex-1"
+                        >
+                            {isSaving ? "Saving..." : "Save"}
+                        </Button>
+                    </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onSave(true)}
+                        disabled={isSaving}
+                        className="w-full mt-2 border border-primary/30 text-primary hover:bg-primary/10"
+                    >
+                        Save & Reprocess AI
+                    </Button>
+                </>
+            ) : (
+                <>
+                    <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                        {content}
+                    </p>
+
+                    {summary && (
+                        <div className="mt-4">
+                            <h3 className="text-xs font-semibold uppercase text-muted-foreground mb-2">AI Summary</h3>
+                            <p className="text-sm text-muted-foreground italic">
+                                {summary}
+                            </p>
+                        </div>
+                    )}
+                </>
+            )}
+        </div>
+    );
+};
+
+export default NoteContent;
