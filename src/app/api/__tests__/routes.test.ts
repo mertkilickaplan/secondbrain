@@ -53,9 +53,8 @@ describe("API Routes", () => {
     describe("POST /api/notes", () => {
         it("should return 401 when not authenticated", async () => {
             mockRequireAuth.mockResolvedValue({
-                user: null,
                 response: new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }),
-            });
+            } as any);
 
             const req = new Request("http://localhost/api/notes", {
                 method: "POST",
@@ -63,16 +62,15 @@ describe("API Routes", () => {
             });
 
             const response = await POST(req);
-            expect(response.status).toBe(401);
+            expect(response?.status).toBe(401);
         });
 
         it("should create a note when authenticated", async () => {
             mockRequireAuth.mockResolvedValue({
                 user: { id: "user-123" } as any,
-                response: null,
-            });
+            } as any);
 
-            mockPrisma.note.create.mockResolvedValue({
+            (mockPrisma.note.create as jest.Mock).mockResolvedValue({
                 id: "note-123",
                 userId: "user-123",
                 content: "Test note",
@@ -94,9 +92,9 @@ describe("API Routes", () => {
             });
 
             const response = await POST(req);
-            expect(response.status).toBe(201);
+            expect(response?.status).toBe(201);
 
-            const data = await response.json();
+            const data = await response?.json();
             expect(data.id).toBe("note-123");
             expect(data.content).toBe("Test note");
         });
@@ -104,8 +102,7 @@ describe("API Routes", () => {
         it("should return 400 for empty content", async () => {
             mockRequireAuth.mockResolvedValue({
                 user: { id: "user-123" } as any,
-                response: null,
-            });
+            } as any);
 
             const req = new Request("http://localhost/api/notes", {
                 method: "POST",
@@ -114,16 +111,15 @@ describe("API Routes", () => {
             });
 
             const response = await POST(req);
-            expect(response.status).toBe(400);
+            expect(response?.status).toBe(400);
         });
     });
 
     describe("GET /api/graph", () => {
         it("should return 401 when not authenticated", async () => {
             mockRequireAuth.mockResolvedValue({
-                user: null,
                 response: new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }),
-            });
+            } as any);
 
             const response = await getGraph();
             expect(response.status).toBe(401);
@@ -132,10 +128,9 @@ describe("API Routes", () => {
         it("should return nodes and links when authenticated", async () => {
             mockRequireAuth.mockResolvedValue({
                 user: { id: "user-123" } as any,
-                response: null,
-            });
+            } as any);
 
-            mockPrisma.note.findMany.mockResolvedValue([
+            (mockPrisma.note.findMany as jest.Mock).mockResolvedValue([
                 {
                     id: "note-1",
                     userId: "user-123",
@@ -152,7 +147,7 @@ describe("API Routes", () => {
                 },
             ]);
 
-            mockPrisma.edge.findMany.mockResolvedValue([]);
+            (mockPrisma.edge.findMany as jest.Mock).mockResolvedValue([]);
 
             const response = await getGraph();
             expect(response.status).toBe(200);
@@ -166,9 +161,8 @@ describe("API Routes", () => {
     describe("GET /api/search", () => {
         it("should return 401 when not authenticated", async () => {
             mockRequireAuth.mockResolvedValue({
-                user: null,
                 response: new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }),
-            });
+            } as any);
 
             const req = new Request("http://localhost/api/search?q=test");
             const response = await searchNotes(req);
@@ -178,8 +172,7 @@ describe("API Routes", () => {
         it("should return empty results for short query", async () => {
             mockRequireAuth.mockResolvedValue({
                 user: { id: "user-123" } as any,
-                response: null,
-            });
+            } as any);
 
             const req = new Request("http://localhost/api/search?q=a");
             const response = await searchNotes(req);
@@ -192,10 +185,9 @@ describe("API Routes", () => {
         it("should search notes by query", async () => {
             mockRequireAuth.mockResolvedValue({
                 user: { id: "user-123" } as any,
-                response: null,
-            });
+            } as any);
 
-            mockPrisma.note.findMany.mockResolvedValue([
+            (mockPrisma.note.findMany as jest.Mock).mockResolvedValue([
                 {
                     id: "note-1",
                     userId: "user-123",

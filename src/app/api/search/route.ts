@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/supabase/auth";
+import { SearchResult, SearchResponse } from "@/types/api";
+import { ApiError, createAuthError, createDatabaseError, createValidationError, handleUnknownError } from "@/lib/api-error";
 
 export const runtime = "nodejs";
 
 export async function GET(req: Request) {
-    const auth = await requireAuth();
-    if (auth.response) return auth.response;
-
     try {
+        const auth = await requireAuth();
+        if (auth.response) throw createAuthError();
+
         const { searchParams } = new URL(req.url);
         const query = searchParams.get("q")?.trim();
         const tag = searchParams.get("tag");
@@ -16,7 +18,11 @@ export async function GET(req: Request) {
         const type = searchParams.get("type");
 
         if (!query || query.length < 2) {
-            return NextResponse.json({ results: [] });
+            return NextResponse.json<SearchResponse>({
+                results: [],
+                query: query || '',
+                count: 0
+            });
         }
 
         // Check if this is a tag search (starts with #)
@@ -27,7 +33,6 @@ export async function GET(req: Request) {
         const filters: string[] = [`"userId" = '${auth.user.id}'`];
 
         if (tag) {
-            // Escape single quotes in tag
             const escapedTag = tag.replace(/'/g, "''");
             filters.push(`tags LIKE '%${escapedTag}%'`);
         }
@@ -36,60 +41,84 @@ export async function GET(req: Request) {
 
         const whereClause = filters.join(' AND ');
 
-        let notes: any[] = [];
+        let notes: SearchResult[] = [];
 
         // Tag search: search only by tag (when query starts with #)
         if (isTagSearch) {
             if (searchTerm.length === 0) {
-                return NextResponse.json({
+                return NextResponse.json<SearchResponse>({
                     results: [],
                     query,
-                    isTagSearch: true
+                    isTagSearch: true,
+                    count: 0
                 });
             }
 
             const escapedSearchTerm = searchTerm.replace(/'/g, "''");
-            notes = await prisma.$queryRawUnsafe<any[]>(`
-                SELECT 
-                    id,
-                    title,
-                    summary,
-                    status,
-                    type,
-                    tags,
-                    1.0 as rank
-                FROM "Note"
-                WHERE ${whereClause}
-                  AND tags LIKE '%${escapedSearchTerm}%'
-                ORDER BY "createdAt" DESC
-                LIMIT 50
-            `);
+
+            try {
+                notes = await prisma.$queryRawUnsafe<SearchResult[]>(`
+                    SELECT 
+                        id,
+                        title,
+                        summary,
+                        status,
+                        type,
+                        tags,
+                        1.0 as rank
+                    FROM "Note"
+                    WHERE ${whereClause}
+                      AND tags LIKE '%${escapedSearchTerm}%'
+                    ORDER BY "createdAt" DESC
+                    LIMIT 50
+                `);
+            } catch (error) {
+                throw createDatabaseError(
+                    'Tag search failed',
+                    error instanceof Error ? error.message : String(error)
+                );
+            }
         } else {
             // Full-text search with ranking and highlighting
-            notes = await prisma.$queryRawUnsafe<any[]>(`
-                SELECT 
-                    id,
-                    title,
-                    summary,
-                    status,
-                    type,
-                    ts_rank(search_vector, plainto_tsquery('english', $1)) as rank,
-                    ts_headline('english', 
-                        COALESCE(title, '') || ' ' || COALESCE(content, ''), 
-                        plainto_tsquery('english', $1),
-                        'MaxWords=20, MinWords=10, ShortWord=3, HighlightAll=false'
-                    ) as snippet
-                FROM "Note"
-                WHERE ${whereClause}
-                  AND search_vector @@ plainto_tsquery('english', $1)
-                ORDER BY rank DESC
-                LIMIT 10
-            `, searchTerm);
+            try {
+                notes = await prisma.$queryRawUnsafe<SearchResult[]>(`
+                    SELECT 
+                        id,
+                        title,
+                        summary,
+                        status,
+                        type,
+                        ts_rank(search_vector, plainto_tsquery('english', $1)) as rank,
+                        ts_headline('english', 
+                            COALESCE(title, '') || ' ' || COALESCE(content, ''), 
+                            plainto_tsquery('english', $1),
+                            'MaxWords=20, MinWords=10, ShortWord=3, HighlightAll=false'
+                        ) as snippet
+                    FROM "Note"
+                    WHERE ${whereClause}
+                      AND search_vector @@ plainto_tsquery('english', $1)
+                    ORDER BY rank DESC
+                    LIMIT 10
+                `, searchTerm);
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
+
+                if (errorMessage.includes('search_vector')) {
+                    throw createDatabaseError('Search index not ready - please try again');
+                } else if (errorMessage.includes('syntax')) {
+                    throw createValidationError('Invalid search query');
+                }
+
+                throw createDatabaseError(
+                    'Full-text search failed',
+                    error instanceof Error ? error.message : String(error)
+                );
+            }
 
             // If we have few results, try fuzzy search for typo tolerance
             if (notes.length < 3) {
                 try {
-                    const fuzzyNotes = await prisma.$queryRawUnsafe<any[]>(`
+                    const fuzzyNotes = await prisma.$queryRawUnsafe<SearchResult[]>(`
                         SELECT 
                             id, title, summary, status, type,
                             GREATEST(
@@ -109,7 +138,7 @@ export async function GET(req: Request) {
 
                     // Add fuzzy results with a rank based on similarity
                     fuzzyNotes.forEach(note => {
-                        note.rank = note.similarity * 0.5; // Lower rank than FTS
+                        note.rank = (note as unknown as { similarity: number }).similarity * 0.5;
                     });
 
                     notes.push(...fuzzyNotes);
@@ -120,31 +149,15 @@ export async function GET(req: Request) {
             }
         }
 
-        return NextResponse.json({
+        return NextResponse.json<SearchResponse>({
             results: notes,
             query,
             isTagSearch,
             filters: { tag, status, type },
             count: notes.length
         });
-    } catch (error: any) {
-        console.error("Error searching notes:", error);
-
-        let userMessage = "Search failed";
-
-        if (error.message) {
-            const msg = error.message.toLowerCase();
-
-            if (msg.includes("search_vector")) {
-                userMessage = "Search index not ready - please try again";
-            } else if (msg.includes("syntax")) {
-                userMessage = "Invalid search query";
-            }
-        }
-
-        return NextResponse.json({
-            error: userMessage,
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
-        }, { status: 500 });
+    } catch (error) {
+        const apiError = handleUnknownError(error);
+        return apiError.toResponse();
     }
 }
