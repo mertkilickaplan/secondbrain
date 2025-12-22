@@ -128,7 +128,8 @@ export async function GET(req: Request) {
 
             // Full-text search for longer queries (4+ chars) or if prefix had no results
             if (notes.length === 0 && searchTerm.length >= 4) {
-                notes = await prisma.$queryRawUnsafe<SearchResult[]>(`
+                try {
+                    notes = await prisma.$queryRawUnsafe<SearchResult[]>(`
                     SELECT 
                         id,
                         title,
@@ -147,28 +148,28 @@ export async function GET(req: Request) {
                     ORDER BY rank DESC
                     LIMIT 10
                 `, searchTerm);
-            } catch (error) {
-                const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
 
-                if (errorMessage.includes('search_vector')) {
-                    throw createDatabaseError('Search index not ready - please try again');
-                } else if (errorMessage.includes('syntax')) {
-                    throw createValidationError('Invalid search query');
+                    if (errorMessage.includes('search_vector')) {
+                        throw createDatabaseError('Search index not ready - please try again');
+                    } else if (errorMessage.includes('syntax')) {
+                        throw createValidationError('Invalid search query');
+                    }
+
+                    throw createDatabaseError(
+                        'Full-text search failed',
+                        error instanceof Error ? error.message : String(error)
+                    );
                 }
+            } // End FTS if block
 
-                throw createDatabaseError(
-                    'Full-text search failed',
-                    error instanceof Error ? error.message : String(error)
-                );
-            }
-        } // End FTS if block
-
-        // If no results and query has Turkish characters, try with normalized query
-        if (notes.length === 0 && hasTurkishCharacters(searchTerm)) {
-            const normalizedTerm = normalizeTurkish(searchTerm);
-            if (normalizedTerm !== searchTerm) {
-                try {
-                    notes = await prisma.$queryRawUnsafe<SearchResult[]>(`
+            // If no results and query has Turkish characters, try with normalized query
+            if (notes.length === 0 && hasTurkishCharacters(searchTerm)) {
+                const normalizedTerm = normalizeTurkish(searchTerm);
+                if (normalizedTerm !== searchTerm) {
+                    try {
+                        notes = await prisma.$queryRawUnsafe<SearchResult[]>(`
                             SELECT 
                                 id,
                                 title,
@@ -187,17 +188,17 @@ export async function GET(req: Request) {
                             ORDER BY rank DESC
                             LIMIT 10
                         `, normalizedTerm);
-                } catch (normalizedError) {
-                    // If normalized search also fails, continue with empty results
-                    console.warn("Normalized FTS failed:", normalizedError);
+                    } catch (normalizedError) {
+                        // If normalized search also fails, continue with empty results
+                        console.warn("Normalized FTS failed:", normalizedError);
+                    }
                 }
             }
-        }
 
-        // If we have few results, try fuzzy search for typo tolerance
-        if (notes.length < 3) {
-            try {
-                const fuzzyNotes = await prisma.$queryRawUnsafe<SearchResult[]>(`
+            // If we have few results, try fuzzy search for typo tolerance
+            if (notes.length < 3) {
+                try {
+                    const fuzzyNotes = await prisma.$queryRawUnsafe<SearchResult[]>(`
                         SELECT 
                             id, title, summary, status, type,
                             GREATEST(
@@ -215,23 +216,23 @@ export async function GET(req: Request) {
                         LIMIT ${10 - notes.length}
                     `, searchTerm);
 
-                // Add fuzzy results with a rank based on similarity
-                fuzzyNotes.forEach(note => {
-                    note.rank = (note as unknown as { similarity: number }).similarity * 0.5;
-                });
+                    // Add fuzzy results with a rank based on similarity
+                    fuzzyNotes.forEach(note => {
+                        note.rank = (note as unknown as { similarity: number }).similarity * 0.5;
+                    });
 
-                notes.push(...fuzzyNotes);
-            } catch (fuzzyError) {
-                // Fuzzy search failed, continue with FTS results only
-                console.warn("Fuzzy search failed:", fuzzyError);
-            }
+                    notes.push(...fuzzyNotes);
+                } catch (fuzzyError) {
+                    // Fuzzy search failed, continue with FTS results only
+                    console.warn("Fuzzy search failed:", fuzzyError);
+                }
 
-            // If still few results and has Turkish characters, try fuzzy with normalized
-            if (notes.length < 3 && hasTurkishCharacters(searchTerm)) {
-                const normalizedTerm = normalizeTurkish(searchTerm);
-                if (normalizedTerm !== searchTerm) {
-                    try {
-                        const normalizedFuzzyNotes = await prisma.$queryRawUnsafe<SearchResult[]>(`
+                // If still few results and has Turkish characters, try fuzzy with normalized
+                if (notes.length < 3 && hasTurkishCharacters(searchTerm)) {
+                    const normalizedTerm = normalizeTurkish(searchTerm);
+                    if (normalizedTerm !== searchTerm) {
+                        try {
+                            const normalizedFuzzyNotes = await prisma.$queryRawUnsafe<SearchResult[]>(`
                                 SELECT 
                                     id, title, summary, status, type,
                                     GREATEST(
@@ -249,28 +250,28 @@ export async function GET(req: Request) {
                                 LIMIT ${10 - notes.length}
                             `, normalizedTerm);
 
-                        normalizedFuzzyNotes.forEach(note => {
-                            note.rank = (note as unknown as { similarity: number }).similarity * 0.5;
-                        });
+                            normalizedFuzzyNotes.forEach(note => {
+                                note.rank = (note as unknown as { similarity: number }).similarity * 0.5;
+                            });
 
-                        notes.push(...normalizedFuzzyNotes);
-                    } catch (normalizedFuzzyError) {
-                        console.warn("Normalized fuzzy search failed:", normalizedFuzzyError);
+                            notes.push(...normalizedFuzzyNotes);
+                        } catch (normalizedFuzzyError) {
+                            console.warn("Normalized fuzzy search failed:", normalizedFuzzyError);
+                        }
                     }
                 }
             }
         }
-    }
 
         return NextResponse.json<SearchResponse>({
-        results: notes,
-        query,
-        isTagSearch,
-        filters: { tag, status, type },
-        count: notes.length
-    });
-} catch (error) {
-    const apiError = handleUnknownError(error);
-    return apiError.toResponse();
-}
+            results: notes,
+            query,
+            isTagSearch,
+            filters: { tag, status, type },
+            count: notes.length
+        });
+    } catch (error) {
+        const apiError = handleUnknownError(error);
+        return apiError.toResponse();
+    }
 }
