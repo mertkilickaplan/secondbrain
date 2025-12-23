@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/supabase/auth";
 import { decrementNoteCount } from "@/lib/subscription-helpers";
+import { logger } from "@/lib/logger";
+import { sanitizeInput, sanitizeHtml } from "@/lib/security";
 
 export const runtime = "nodejs";
 
@@ -28,11 +30,16 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
 
         // Decrement note count after successful deletion
         await decrementNoteCount(auth.user.id);
-        console.log(`[SUBSCRIPTION] Note deleted for user ${auth.user.id}`);
+        logger.info('Note deleted', { userId: auth.user.id, noteId: id });
 
         return NextResponse.json({ ok: true, message: "Note deleted" });
     } catch (error: any) {
-        console.error("Error deleting note:", error);
+        logger.error('Error deleting note', {
+            error: error.message,
+            stack: error.stack,
+            userId: auth.user.id,
+            noteId: id
+        });
 
         let userMessage = "Failed to delete note";
 
@@ -65,12 +72,21 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     try {
         const body = await req.json();
-        const { content, title, tags, reprocess } = body as {
+        let { content, title, tags, reprocess } = body as {
             content?: string;
             title?: string;
             tags?: string[];
             reprocess?: boolean;
         };
+
+        // Sanitize inputs
+        if (content) {
+            content = sanitizeInput(content);
+            content = sanitizeHtml(content);
+        }
+        if (title) {
+            title = sanitizeInput(title);
+        }
 
         // Check if note exists and belongs to user
         const note = await prisma.note.findUnique({ where: { id } });
@@ -100,7 +116,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
         return NextResponse.json(updatedNote);
     } catch (error: any) {
-        console.error("Error updating note:", error);
+        logger.error('Error updating note', {
+            error: error.message,
+            stack: error.stack,
+            userId: auth.user.id,
+            noteId: id
+        });
 
         let userMessage = "Failed to update note";
 

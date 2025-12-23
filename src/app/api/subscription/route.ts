@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/supabase/auth";
 import { getUserSubscription, upgradeToPremium, downgradeToFree } from "@/lib/subscription-helpers";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -13,7 +14,7 @@ export async function GET() {
         const subscription = await getUserSubscription(auth.user.id);
         return NextResponse.json(subscription);
     } catch (error: any) {
-        console.error("Error fetching subscription:", error);
+        logger.error('Error fetching subscription', { error: error.message, userId: auth.user.id });
         return NextResponse.json({
             error: "Failed to fetch subscription",
             details: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -33,13 +34,13 @@ export async function POST() {
         // For now, this is a manual upgrade endpoint
         const subscription = await upgradeToPremium(auth.user.id);
 
-        console.log(`[SUBSCRIPTION] User ${auth.user.id} upgraded to premium`);
+        logger.info('User upgraded to premium', { userId: auth.user.id });
         return NextResponse.json({
             subscription,
             message: "Successfully upgraded to Premium!"
         });
     } catch (error: any) {
-        console.error("Error upgrading subscription:", error);
+        logger.error('Error upgrading subscription', { error: error.message, userId: auth.user.id });
         return NextResponse.json({
             error: "Failed to upgrade subscription",
             details: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -55,13 +56,13 @@ export async function DELETE() {
     try {
         const subscription = await downgradeToFree(auth.user.id);
 
-        console.log(`[SUBSCRIPTION] User ${auth.user.id} downgraded to free`);
+        logger.info('User downgraded to free', { userId: auth.user.id });
         return NextResponse.json({
             subscription,
             message: "Downgraded to Free tier"
         });
     } catch (error: any) {
-        console.error("Error downgrading subscription:", error);
+        logger.error('Error downgrading subscription', { error: error.message, userId: auth.user.id });
         return NextResponse.json({
             error: "Failed to downgrade subscription",
             details: process.env.NODE_ENV === 'development' ? error.message : undefined

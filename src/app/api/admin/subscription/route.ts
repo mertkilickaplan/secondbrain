@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/supabase/auth";
 import { upgradeToPremium, downgradeToFree, getUserSubscription } from "@/lib/subscription-helpers";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
 
         if (action === "upgrade") {
             const subscription = await upgradeToPremium(userId);
-            console.log(`[ADMIN] Upgraded user ${userId} to premium`);
+            logger.info('Admin upgraded user to premium', { userId, adminAction: true });
             return NextResponse.json({
                 success: true,
                 message: `User ${userId} upgraded to premium`,
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
             });
         } else if (action === "downgrade") {
             const subscription = await downgradeToFree(userId);
-            console.log(`[ADMIN] Downgraded user ${userId} to free`);
+            logger.info('Admin downgraded user to free', { userId, adminAction: true });
             return NextResponse.json({
                 success: true,
                 message: `User ${userId} downgraded to free`,
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Invalid action. Use 'upgrade' or 'downgrade'" }, { status: 400 });
         }
     } catch (error: any) {
-        console.error("Admin subscription error:", error);
+        logger.error('Admin subscription error', { error: error.message });
         return NextResponse.json({
             error: "Failed to update subscription",
             details: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -72,7 +73,7 @@ export async function GET(req: Request) {
         const subscription = await getUserSubscription(userId);
         return NextResponse.json(subscription);
     } catch (error: any) {
-        console.error("Admin get subscription error:", error);
+        logger.error('Admin get subscription error', { error: error.message });
         return NextResponse.json({
             error: "Failed to get subscription",
             details: process.env.NODE_ENV === 'development' ? error.message : undefined

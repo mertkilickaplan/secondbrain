@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/supabase/auth";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -31,9 +32,9 @@ export async function GET(_req: Request) {
                             }
                         });
                     }
-                } catch (e) {
+                } catch (e: any) {
                     // Skip invalid JSON
-                    console.warn("Invalid tags JSON:", note.tags);
+                    logger.warn('Invalid tags JSON', { tags: note.tags, error: e.message });
                 }
             }
         }
@@ -45,7 +46,7 @@ export async function GET(_req: Request) {
 
         return NextResponse.json({ tags: uniqueTags });
     } catch (error: any) {
-        console.error("Error fetching tags:", error);
+        logger.error('Error fetching tags', { error: error.message, userId: auth.user.id });
 
         return NextResponse.json({
             error: "Failed to fetch tags",

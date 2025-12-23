@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/supabase/auth";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -63,8 +64,12 @@ export async function GET() {
                 explanation: e.explanation,
             })),
         });
-    } catch (error) {
-        console.error("Error fetching graph data:", error);
+    } catch (error: any) {
+        logger.error('Error fetching graph data', {
+            error: error.message,
+            stack: error.stack,
+            userId: auth.user.id
+        });
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

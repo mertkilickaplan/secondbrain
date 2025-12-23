@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/supabase/auth";
 import { getUsageStats } from "@/lib/subscription-helpers";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -13,7 +14,7 @@ export async function GET() {
         const stats = await getUsageStats(auth.user.id);
         return NextResponse.json(stats);
     } catch (error: any) {
-        console.error("Error fetching usage stats:", error);
+        logger.error('Error fetching usage stats', { error: error.message, userId: auth.user.id });
         return NextResponse.json({
             error: "Failed to fetch usage statistics",
             details: process.env.NODE_ENV === 'development' ? error.message : undefined

@@ -4,6 +4,7 @@ import { analyzeNote, generateEmbedding, explainConnection } from "@/lib/ai";
 import { cosineSimilarity } from "@/lib/utils";
 import { requireAuth } from "@/lib/supabase/auth";
 import { canUseAI } from "@/lib/subscription-helpers";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -44,7 +45,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     // Check if user has AI access
     const hasAI = await canUseAI(auth.user.id);
     if (!hasAI) {
-        console.log(`[SUBSCRIPTION] User ${auth.user.id} attempted AI processing without access`);
+        logger.warn('User attempted AI processing without access', { userId: auth.user.id });
         return NextResponse.json({
             error: "AI features not available",
             message: "AI-powered analysis is a Premium feature. Upgrade to unlock smart connections and summaries!",
@@ -79,7 +80,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
             );
         }
 
-        console.log("[PROCESS] Starting processing for note:", id, "status:", note.status);
+        logger.info('Starting note processing', { noteId: id, status: note.status });
 
         // Keep status as processing (it's already set on creation)
         if (note.status !== "processing") {
@@ -105,15 +106,15 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
         }
 
         // 1) Analyze + Embedding
-        console.log("[PROCESS] Starting AI analysis for note:", id);
+        logger.info('Starting AI analysis', { noteId: id });
         const analysis = await analyzeNote(baseText);
-        console.log("[PROCESS] AI analysis complete:", analysis);
+        logger.info('AI analysis complete', { noteId: id, analysis });
 
         // Keep embedding input short & stable
         const embedInput = `Title: ${analysis.title}\nSummary: ${analysis.summary}\nTopics: ${(analysis.topics ?? []).join(", ")}`;
-        console.log("[PROCESS] Generating embedding...");
+        logger.info('Generating embedding', { noteId: id });
         const embedding = await generateEmbedding(embedInput);
-        console.log("[PROCESS] Embedding generated, length:", embedding.length);
+        logger.info('Embedding generated', { noteId: id, embeddingLength: embedding.length });
 
         // 2) Update note fields (but don't overwrite good URL title)
         const shouldOverwriteTitle =
@@ -212,8 +213,8 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
             let explanation = "";
             try {
                 explanation = await explainConnection(sourceText, targetText);
-            } catch (e) {
-                console.warn("explainConnection failed:", e);
+            } catch (e: any) {
+                logger.warn('explainConnection failed', { error: e.message, noteId: id });
                 explanation = "Semantically related.";
             }
 
@@ -242,7 +243,12 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
         return NextResponse.json({ ok: true, note: finalNote, edges });
     } catch (error: any) {
-        console.error("Error processing note:", error);
+        logger.error('Error processing note', {
+            error: error.message,
+            stack: error.stack,
+            noteId: id,
+            userId: auth.user.id
+        });
 
         // Categorize error types for better user feedback
         let userMessage = "Processing failed";
@@ -281,8 +287,8 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
                     summary: userMessage
                 }
             });
-        } catch (dbError) {
-            console.error("Failed to update note status:", dbError);
+        } catch (dbError: any) {
+            logger.error('Failed to update note status', { error: dbError.message, noteId: id });
         }
 
         // Return detailed error in development, generic in production

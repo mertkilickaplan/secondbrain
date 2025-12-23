@@ -5,6 +5,8 @@ import { noteContentSchema, validateOrError } from "@/lib/validation";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { requireAuth } from "@/lib/supabase/auth";
 import { canCreateNote, incrementNoteCount, canUseAI } from "@/lib/subscription-helpers";
+import { logger } from "@/lib/logger";
+import { sanitizeInput, sanitizeHtml } from "@/lib/security";
 
 export const runtime = "nodejs";
 
@@ -22,7 +24,7 @@ export async function POST(req: Request) {
     // Subscription check - can user create a note?
     const canCreate = await canCreateNote(auth.user.id);
     if (!canCreate) {
-        console.log(`[SUBSCRIPTION] User ${auth.user.id} hit note limit`);
+        logger.warn('User hit note limit', { userId: auth.user.id });
         return NextResponse.json({
             error: "Note limit reached",
             message: "You've reached your free tier limit. Upgrade to Premium for unlimited notes!",
@@ -33,11 +35,20 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { content, type = "text", url } = body as {
+        let { content, type = "text", url } = body as {
             content?: string;
             type?: "text" | "url";
             url?: string;
         };
+
+        // Sanitize inputs
+        if (content) {
+            content = sanitizeInput(content);
+            content = sanitizeHtml(content);
+        }
+        if (url) {
+            url = sanitizeInput(url);
+        }
 
         // Validate text content
         if (type === "text") {
@@ -77,11 +88,20 @@ export async function POST(req: Request) {
 
         // Increment note count after successful creation
         await incrementNoteCount(auth.user.id);
-        console.log(`[SUBSCRIPTION] Note created for user ${auth.user.id}, status: ${initialStatus}`);
+        logger.info('Note created', {
+            userId: auth.user.id,
+            noteId: note.id,
+            status: initialStatus,
+            type
+        });
 
         return NextResponse.json(note, { status: 201 });
     } catch (error: any) {
-        console.error("Error creating note:", error);
+        logger.error('Error creating note', {
+            error: error.message,
+            stack: error.stack,
+            userId: auth.user.id
+        });
 
         // Provide user-friendly error messages
         let userMessage = "Failed to create note";

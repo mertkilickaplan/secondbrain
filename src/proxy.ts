@@ -49,6 +49,35 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(appUrl);
     }
 
+    // Add security headers to all responses
+    // Content Security Policy
+    const cspHeader = `
+        default-src 'self';
+        script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        img-src 'self' blob: data: https:;
+        font-src 'self' https://fonts.gstatic.com;
+        connect-src 'self' https://*.supabase.co https://generativelanguage.googleapis.com https://vercel.live;
+        frame-ancestors 'none';
+        base-uri 'self';
+        form-action 'self';
+    `.replace(/\s{2,}/g, ' ').trim();
+
+    supabaseResponse.headers.set('Content-Security-Policy', cspHeader);
+    supabaseResponse.headers.set('X-Frame-Options', 'DENY');
+    supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff');
+    supabaseResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    supabaseResponse.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    supabaseResponse.headers.set('X-DNS-Prefetch-Control', 'on');
+
+    // Strict Transport Security (HTTPS only) in production
+    if (process.env.NODE_ENV === 'production') {
+        supabaseResponse.headers.set(
+            'Strict-Transport-Security',
+            'max-age=31536000; includeSubDomains'
+        );
+    }
+
     return supabaseResponse;
 }
 
