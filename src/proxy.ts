@@ -1,9 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Routes that require authentication
-const protectedRoutes = ["/"];
-// Routes that should redirect to home if already authenticated
+// Routes that require authentication (app routes)
+const protectedRoutes = ["/app"];
+// Routes that should redirect to app if already authenticated
 const authRoutes = ["/login"];
 
 export async function proxy(request: NextRequest) {
@@ -38,15 +38,15 @@ export async function proxy(request: NextRequest) {
     const path = request.nextUrl.pathname;
 
     // Redirect unauthenticated users from protected routes to login
-    if (protectedRoutes.includes(path) && !user) {
+    if (protectedRoutes.some(route => path.startsWith(route)) && !user) {
         const loginUrl = new URL("/login", request.url);
         return NextResponse.redirect(loginUrl);
     }
 
-    // Redirect authenticated users from auth routes to home
+    // Redirect authenticated users from auth routes to app
     if (authRoutes.includes(path) && user) {
-        const homeUrl = new URL("/", request.url);
-        return NextResponse.redirect(homeUrl);
+        const appUrl = new URL("/app", request.url);
+        return NextResponse.redirect(appUrl);
     }
 
     return supabaseResponse;
