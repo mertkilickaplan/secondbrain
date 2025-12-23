@@ -30,6 +30,23 @@ export type Edge = $Result.DefaultSelection<Prisma.$EdgePayload>
 export type UserSubscription = $Result.DefaultSelection<Prisma.$UserSubscriptionPayload>
 
 /**
+ * Enums
+ */
+export namespace $Enums {
+  export const SubscriptionTier: {
+  free: 'free',
+  premium: 'premium'
+};
+
+export type SubscriptionTier = (typeof SubscriptionTier)[keyof typeof SubscriptionTier]
+
+}
+
+export type SubscriptionTier = $Enums.SubscriptionTier
+
+export const SubscriptionTier: typeof $Enums.SubscriptionTier
+
+/**
  * ##  Prisma Client ʲˢ
  * 
  * Type-safe database client for TypeScript & Node.js
@@ -3120,7 +3137,7 @@ export namespace Prisma {
   export type UserSubscriptionMinAggregateOutputType = {
     id: string | null
     userId: string | null
-    tier: string | null
+    tier: $Enums.SubscriptionTier | null
     noteCount: number | null
     maxNotes: number | null
     aiEnabled: boolean | null
@@ -3131,7 +3148,7 @@ export namespace Prisma {
   export type UserSubscriptionMaxAggregateOutputType = {
     id: string | null
     userId: string | null
-    tier: string | null
+    tier: $Enums.SubscriptionTier | null
     noteCount: number | null
     maxNotes: number | null
     aiEnabled: boolean | null
@@ -3285,7 +3302,7 @@ export namespace Prisma {
   export type UserSubscriptionGroupByOutputType = {
     id: string
     userId: string
-    tier: string
+    tier: $Enums.SubscriptionTier
     noteCount: number
     maxNotes: number | null
     aiEnabled: boolean
@@ -3352,7 +3369,7 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       userId: string
-      tier: string
+      tier: $Enums.SubscriptionTier
       noteCount: number
       maxNotes: number | null
       aiEnabled: boolean
@@ -3753,7 +3770,7 @@ export namespace Prisma {
   interface UserSubscriptionFieldRefs {
     readonly id: FieldRef<"UserSubscription", 'String'>
     readonly userId: FieldRef<"UserSubscription", 'String'>
-    readonly tier: FieldRef<"UserSubscription", 'String'>
+    readonly tier: FieldRef<"UserSubscription", 'SubscriptionTier'>
     readonly noteCount: FieldRef<"UserSubscription", 'Int'>
     readonly maxNotes: FieldRef<"UserSubscription", 'Int'>
     readonly aiEnabled: FieldRef<"UserSubscription", 'Boolean'>
@@ -4177,6 +4194,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'SubscriptionTier'
+   */
+  export type EnumSubscriptionTierFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SubscriptionTier'>
+    
+
+
+  /**
+   * Reference to a field of type 'SubscriptionTier[]'
+   */
+  export type ListEnumSubscriptionTierFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SubscriptionTier[]'>
+    
+
+
+  /**
    * Reference to a field of type 'Int'
    */
   export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -4365,7 +4396,7 @@ export namespace Prisma {
     NOT?: UserSubscriptionWhereInput | UserSubscriptionWhereInput[]
     id?: StringFilter<"UserSubscription"> | string
     userId?: StringFilter<"UserSubscription"> | string
-    tier?: StringFilter<"UserSubscription"> | string
+    tier?: EnumSubscriptionTierFilter<"UserSubscription"> | $Enums.SubscriptionTier
     noteCount?: IntFilter<"UserSubscription"> | number
     maxNotes?: IntNullableFilter<"UserSubscription"> | number | null
     aiEnabled?: BoolFilter<"UserSubscription"> | boolean
@@ -4390,7 +4421,7 @@ export namespace Prisma {
     AND?: UserSubscriptionWhereInput | UserSubscriptionWhereInput[]
     OR?: UserSubscriptionWhereInput[]
     NOT?: UserSubscriptionWhereInput | UserSubscriptionWhereInput[]
-    tier?: StringFilter<"UserSubscription"> | string
+    tier?: EnumSubscriptionTierFilter<"UserSubscription"> | $Enums.SubscriptionTier
     noteCount?: IntFilter<"UserSubscription"> | number
     maxNotes?: IntNullableFilter<"UserSubscription"> | number | null
     aiEnabled?: BoolFilter<"UserSubscription"> | boolean
@@ -4420,7 +4451,7 @@ export namespace Prisma {
     NOT?: UserSubscriptionScalarWhereWithAggregatesInput | UserSubscriptionScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"UserSubscription"> | string
     userId?: StringWithAggregatesFilter<"UserSubscription"> | string
-    tier?: StringWithAggregatesFilter<"UserSubscription"> | string
+    tier?: EnumSubscriptionTierWithAggregatesFilter<"UserSubscription"> | $Enums.SubscriptionTier
     noteCount?: IntWithAggregatesFilter<"UserSubscription"> | number
     maxNotes?: IntNullableWithAggregatesFilter<"UserSubscription"> | number | null
     aiEnabled?: BoolWithAggregatesFilter<"UserSubscription"> | boolean
@@ -4605,7 +4636,7 @@ export namespace Prisma {
   export type UserSubscriptionCreateInput = {
     id?: string
     userId: string
-    tier?: string
+    tier?: $Enums.SubscriptionTier
     noteCount?: number
     maxNotes?: number | null
     aiEnabled?: boolean
@@ -4616,7 +4647,7 @@ export namespace Prisma {
   export type UserSubscriptionUncheckedCreateInput = {
     id?: string
     userId: string
-    tier?: string
+    tier?: $Enums.SubscriptionTier
     noteCount?: number
     maxNotes?: number | null
     aiEnabled?: boolean
@@ -4627,7 +4658,7 @@ export namespace Prisma {
   export type UserSubscriptionUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    tier?: StringFieldUpdateOperationsInput | string
+    tier?: EnumSubscriptionTierFieldUpdateOperationsInput | $Enums.SubscriptionTier
     noteCount?: IntFieldUpdateOperationsInput | number
     maxNotes?: NullableIntFieldUpdateOperationsInput | number | null
     aiEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -4638,7 +4669,7 @@ export namespace Prisma {
   export type UserSubscriptionUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    tier?: StringFieldUpdateOperationsInput | string
+    tier?: EnumSubscriptionTierFieldUpdateOperationsInput | $Enums.SubscriptionTier
     noteCount?: IntFieldUpdateOperationsInput | number
     maxNotes?: NullableIntFieldUpdateOperationsInput | number | null
     aiEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -4649,7 +4680,7 @@ export namespace Prisma {
   export type UserSubscriptionCreateManyInput = {
     id?: string
     userId: string
-    tier?: string
+    tier?: $Enums.SubscriptionTier
     noteCount?: number
     maxNotes?: number | null
     aiEnabled?: boolean
@@ -4660,7 +4691,7 @@ export namespace Prisma {
   export type UserSubscriptionUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    tier?: StringFieldUpdateOperationsInput | string
+    tier?: EnumSubscriptionTierFieldUpdateOperationsInput | $Enums.SubscriptionTier
     noteCount?: IntFieldUpdateOperationsInput | number
     maxNotes?: NullableIntFieldUpdateOperationsInput | number | null
     aiEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -4671,7 +4702,7 @@ export namespace Prisma {
   export type UserSubscriptionUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
-    tier?: StringFieldUpdateOperationsInput | string
+    tier?: EnumSubscriptionTierFieldUpdateOperationsInput | $Enums.SubscriptionTier
     noteCount?: IntFieldUpdateOperationsInput | number
     maxNotes?: NullableIntFieldUpdateOperationsInput | number | null
     aiEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -4902,6 +4933,13 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
+  export type EnumSubscriptionTierFilter<$PrismaModel = never> = {
+    equals?: $Enums.SubscriptionTier | EnumSubscriptionTierFieldRefInput<$PrismaModel>
+    in?: $Enums.SubscriptionTier[] | ListEnumSubscriptionTierFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SubscriptionTier[] | ListEnumSubscriptionTierFieldRefInput<$PrismaModel>
+    not?: NestedEnumSubscriptionTierFilter<$PrismaModel> | $Enums.SubscriptionTier
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -4970,6 +5008,16 @@ export namespace Prisma {
   export type UserSubscriptionSumOrderByAggregateInput = {
     noteCount?: SortOrder
     maxNotes?: SortOrder
+  }
+
+  export type EnumSubscriptionTierWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.SubscriptionTier | EnumSubscriptionTierFieldRefInput<$PrismaModel>
+    in?: $Enums.SubscriptionTier[] | ListEnumSubscriptionTierFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SubscriptionTier[] | ListEnumSubscriptionTierFieldRefInput<$PrismaModel>
+    not?: NestedEnumSubscriptionTierWithAggregatesFilter<$PrismaModel> | $Enums.SubscriptionTier
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumSubscriptionTierFilter<$PrismaModel>
+    _max?: NestedEnumSubscriptionTierFilter<$PrismaModel>
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -5144,6 +5192,10 @@ export namespace Prisma {
     update?: XOR<XOR<NoteUpdateToOneWithWhereWithoutIncomingEdgesInput, NoteUpdateWithoutIncomingEdgesInput>, NoteUncheckedUpdateWithoutIncomingEdgesInput>
   }
 
+  export type EnumSubscriptionTierFieldUpdateOperationsInput = {
+    set?: $Enums.SubscriptionTier
+  }
+
   export type IntFieldUpdateOperationsInput = {
     set?: number
     increment?: number
@@ -5300,9 +5352,26 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
+  export type NestedEnumSubscriptionTierFilter<$PrismaModel = never> = {
+    equals?: $Enums.SubscriptionTier | EnumSubscriptionTierFieldRefInput<$PrismaModel>
+    in?: $Enums.SubscriptionTier[] | ListEnumSubscriptionTierFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SubscriptionTier[] | ListEnumSubscriptionTierFieldRefInput<$PrismaModel>
+    not?: NestedEnumSubscriptionTierFilter<$PrismaModel> | $Enums.SubscriptionTier
+  }
+
   export type NestedBoolFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel>
     not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
+  export type NestedEnumSubscriptionTierWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.SubscriptionTier | EnumSubscriptionTierFieldRefInput<$PrismaModel>
+    in?: $Enums.SubscriptionTier[] | ListEnumSubscriptionTierFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SubscriptionTier[] | ListEnumSubscriptionTierFieldRefInput<$PrismaModel>
+    not?: NestedEnumSubscriptionTierWithAggregatesFilter<$PrismaModel> | $Enums.SubscriptionTier
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumSubscriptionTierFilter<$PrismaModel>
+    _max?: NestedEnumSubscriptionTierFilter<$PrismaModel>
   }
 
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
