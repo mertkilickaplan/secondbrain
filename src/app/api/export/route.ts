@@ -5,64 +5,64 @@ import { requireAuth } from "@/lib/supabase/auth";
 export const runtime = "nodejs";
 
 export async function GET() {
-    // Auth check
-    const auth = await requireAuth();
-    if (auth.response) return auth.response;
+  // Auth check
+  const auth = await requireAuth();
+  if (auth.response) return auth.response;
 
-    try {
-        const userId = auth.user.id;
+  try {
+    const userId = auth.user.id;
 
-        // Fetch only this user's notes with their edges
-        const notes = await prisma.note.findMany({
-            where: { userId },
-            include: {
-                outgoingEdges: true,
-                incomingEdges: true,
-            },
-            orderBy: { createdAt: "asc" },
-        });
+    // Fetch only this user's notes with their edges
+    const notes = await prisma.note.findMany({
+      where: { userId },
+      include: {
+        outgoingEdges: true,
+        incomingEdges: true,
+      },
+      orderBy: { createdAt: "asc" },
+    });
 
-        // Get edges only between this user's notes
-        const noteIds = notes.map(n => n.id);
-        const edges = await prisma.edge.findMany({
-            where: {
-                sourceId: { in: noteIds },
-                targetId: { in: noteIds },
-            },
-        });
+    // Get edges only between this user's notes
+    const noteIds = notes.map((n) => n.id);
+    const edges = await prisma.edge.findMany({
+      where: {
+        sourceId: { in: noteIds },
+        targetId: { in: noteIds },
+      },
+    });
 
-        const exportData = {
-            version: "1.0",
-            exportedAt: new Date().toISOString(),
-            notes: notes.map((note) => ({
-                id: note.id,
-                content: note.content,
-                type: note.type,
-                url: note.url,
-                title: note.title,
-                summary: note.summary,
-                topics: note.topics ? JSON.parse(note.topics) : [],
-                status: note.status,
-                createdAt: note.createdAt.toISOString(),
-            })),
-            edges: edges.map((edge) => ({
-                id: edge.id,
-                sourceId: edge.sourceId,
-                targetId: edge.targetId,
-                similarity: edge.similarity,
-                explanation: edge.explanation,
-            })),
-        };
+    const exportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      notes: notes.map((note) => ({
+        id: note.id,
+        content: note.content,
+        type: note.type,
+        url: note.url,
+        title: note.title,
+        summary: note.summary,
+        topics: note.topics ? JSON.parse(note.topics) : [],
+        status: note.status,
+        createdAt: note.createdAt.toISOString(),
+      })),
+      edges: edges.map((edge) => ({
+        id: edge.id,
+        sourceId: edge.sourceId,
+        targetId: edge.targetId,
+        similarity: edge.similarity,
+        explanation: edge.explanation,
+      })),
+    };
 
-        return new NextResponse(JSON.stringify(exportData, null, 2), {
-            status: 200,
-            headers: {
-                "Content-Type": "application/json",
-                "Content-Disposition": `attachment; filename="secondbrain-export-${new Date().toISOString().split("T")[0]}.json"`,
-            },
-        });
-    } catch (error) {
-        console.error("Export error:", error);
-        return NextResponse.json({ error: "Export failed" }, { status: 500 });
-    }
+    return new NextResponse(JSON.stringify(exportData, null, 2), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Disposition": `attachment; filename="secondbrain-export-${new Date().toISOString().split("T")[0]}.json"`,
+      },
+    });
+  } catch (error) {
+    console.error("Export error:", error);
+    return NextResponse.json({ error: "Export failed" }, { status: 500 });
+  }
 }

@@ -22,14 +22,10 @@ export default function RootLayout({
       <body className={inter.variable}>
         <ThemeProvider>
           <ToastProvider>
-            <ClientWrapper>
-              {children}
-            </ClientWrapper>
+            <ClientWrapper>{children}</ClientWrapper>
           </ToastProvider>
         </ThemeProvider>
       </body>
     </html>
   );
 }
-
-

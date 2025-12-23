@@ -9,74 +9,83 @@ export const runtime = "nodejs";
 const ADMIN_KEY = process.env.ADMIN_SECRET_KEY || "change-this-in-production";
 
 function isAdmin(request: Request): boolean {
-    const authHeader = request.headers.get("authorization");
-    return authHeader === `Bearer ${ADMIN_KEY}`;
+  const authHeader = request.headers.get("authorization");
+  return authHeader === `Bearer ${ADMIN_KEY}`;
 }
 
 // POST /api/admin/subscription - Upgrade user to premium
 export async function POST(req: Request) {
-    // Check admin authorization
-    if (!isAdmin(req)) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Check admin authorization
+  if (!isAdmin(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const { userId, action } = await req.json();
+
+    if (!userId) {
+      return NextResponse.json({ error: "userId required" }, { status: 400 });
     }
 
-    try {
-        const { userId, action } = await req.json();
-
-        if (!userId) {
-            return NextResponse.json({ error: "userId required" }, { status: 400 });
-        }
-
-        if (action === "upgrade") {
-            const subscription = await upgradeToPremium(userId);
-            logger.info('Admin upgraded user to premium', { userId, adminAction: true });
-            return NextResponse.json({
-                success: true,
-                message: `User ${userId} upgraded to premium`,
-                subscription
-            });
-        } else if (action === "downgrade") {
-            const subscription = await downgradeToFree(userId);
-            logger.info('Admin downgraded user to free', { userId, adminAction: true });
-            return NextResponse.json({
-                success: true,
-                message: `User ${userId} downgraded to free`,
-                subscription
-            });
-        } else {
-            return NextResponse.json({ error: "Invalid action. Use 'upgrade' or 'downgrade'" }, { status: 400 });
-        }
-    } catch (error: any) {
-        logger.error('Admin subscription error', { error: error.message });
-        return NextResponse.json({
-            error: "Failed to update subscription",
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
-        }, { status: 500 });
+    if (action === "upgrade") {
+      const subscription = await upgradeToPremium(userId);
+      logger.info("Admin upgraded user to premium", { userId, adminAction: true });
+      return NextResponse.json({
+        success: true,
+        message: `User ${userId} upgraded to premium`,
+        subscription,
+      });
+    } else if (action === "downgrade") {
+      const subscription = await downgradeToFree(userId);
+      logger.info("Admin downgraded user to free", { userId, adminAction: true });
+      return NextResponse.json({
+        success: true,
+        message: `User ${userId} downgraded to free`,
+        subscription,
+      });
+    } else {
+      return NextResponse.json(
+        { error: "Invalid action. Use 'upgrade' or 'downgrade'" },
+        { status: 400 }
+      );
     }
+  } catch (error: any) {
+    logger.error("Admin subscription error", { error: error.message });
+    return NextResponse.json(
+      {
+        error: "Failed to update subscription",
+        details: process.env.NODE_ENV === "development" ? error.message : undefined,
+      },
+      { status: 500 }
+    );
+  }
 }
 
 // GET /api/admin/subscription?userId=xxx - Get user subscription
 export async function GET(req: Request) {
-    // Check admin authorization
-    if (!isAdmin(req)) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Check admin authorization
+  if (!isAdmin(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+
+    if (!userId) {
+      return NextResponse.json({ error: "userId required" }, { status: 400 });
     }
 
-    try {
-        const { searchParams } = new URL(req.url);
-        const userId = searchParams.get("userId");
-
-        if (!userId) {
-            return NextResponse.json({ error: "userId required" }, { status: 400 });
-        }
-
-        const subscription = await getUserSubscription(userId);
-        return NextResponse.json(subscription);
-    } catch (error: any) {
-        logger.error('Admin get subscription error', { error: error.message });
-        return NextResponse.json({
-            error: "Failed to get subscription",
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
-        }, { status: 500 });
-    }
+    const subscription = await getUserSubscription(userId);
+    return NextResponse.json(subscription);
+  } catch (error: any) {
+    logger.error("Admin get subscription error", { error: error.message });
+    return NextResponse.json(
+      {
+        error: "Failed to get subscription",
+        details: process.env.NODE_ENV === "development" ? error.message : undefined,
+      },
+      { status: 500 }
+    );
+  }
 }
