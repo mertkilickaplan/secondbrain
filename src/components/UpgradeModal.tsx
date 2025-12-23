@@ -2,11 +2,48 @@
 
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { FEATURE_MATRIX, PRICING } from "@/lib/subscription-config";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function UpgradeModal() {
   const { isUpgradeModalOpen, hideUpgradeModal, subscription, refetch } = useSubscription();
   const [upgrading, setUpgrading] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Focus trap and ESC key handling
+  useEffect(() => {
+    if (!isUpgradeModalOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        hideUpgradeModal();
+      }
+
+      // Focus trap
+      if (e.key === "Tab" && modalRef.current) {
+        const focusableElements = modalRef.current.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0] as HTMLElement;
+        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    // Focus first interactive element
+    const firstButton = modalRef.current?.querySelector("button");
+    firstButton?.focus();
+
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isUpgradeModalOpen, hideUpgradeModal]);
 
   if (!isUpgradeModalOpen) return null;
 
@@ -36,14 +73,26 @@ export default function UpgradeModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="upgrade-modal-title"
+      aria-describedby="upgrade-modal-description"
+      onClick={hideUpgradeModal}
+    >
+      <div
+        ref={modalRef}
+        className="bg-card border border-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="relative p-6 border-b border-border bg-gradient-to-br from-primary/5 to-transparent">
           <button
             onClick={hideUpgradeModal}
             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Close"
+            aria-label="Close upgrade modal"
+            title="Close (ESC)"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -58,10 +107,10 @@ export default function UpgradeModal() {
             </svg>
           </button>
 
-          <h2 className="text-2xl font-bold mb-2">
+          <h2 id="upgrade-modal-title" className="text-2xl font-bold mb-2">
             {isPremium ? "✨ You're Premium!" : "Upgrade to Premium"}
           </h2>
-          <p className="text-muted-foreground">
+          <p id="upgrade-modal-description" className="text-muted-foreground">
             {isPremium
               ? "Enjoy unlimited notes and AI-powered features!"
               : "Unlock unlimited notes and AI-powered insights"}
