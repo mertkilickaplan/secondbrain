@@ -146,6 +146,17 @@ exports.Prisma.EdgeScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.UserSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  tier: 'tier',
+  noteCount: 'noteCount',
+  maxNotes: 'maxNotes',
+  aiEnabled: 'aiEnabled',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -164,7 +175,8 @@ exports.Prisma.NullsOrder = {
 
 exports.Prisma.ModelName = {
   Note: 'Note',
-  Edge: 'Edge'
+  Edge: 'Edge',
+  UserSubscription: 'UserSubscription'
 };
 
 /**

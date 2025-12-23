@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { analyzeNote, generateEmbedding, explainConnection } from "@/lib/ai";
 import { cosineSimilarity } from "@/lib/utils";
 import { requireAuth } from "@/lib/supabase/auth";
+import { canUseAI } from "@/lib/subscription-helpers";
 
 export const runtime = "nodejs";
 
@@ -39,6 +40,17 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     if (auth.response) return auth.response;
 
     const { id } = await params;
+
+    // Check if user has AI access
+    const hasAI = await canUseAI(auth.user.id);
+    if (!hasAI) {
+        console.log(`[SUBSCRIPTION] User ${auth.user.id} attempted AI processing without access`);
+        return NextResponse.json({
+            error: "AI features not available",
+            message: "AI-powered analysis is a Premium feature. Upgrade to unlock smart connections and summaries!",
+            code: "AI_NOT_AVAILABLE"
+        }, { status: 403 });
+    }
 
     try {
         const note = await prisma.note.findUnique({ where: { id } });

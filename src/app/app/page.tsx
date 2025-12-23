@@ -8,9 +8,12 @@ import NoteDetail from "@/components/NoteDetail";
 import SearchBar from "@/components/SearchBar";
 import ExportImportModal from "@/components/ExportImportModal";
 import UserMenu from "@/components/UserMenu";
+import SubscriptionBadge from "@/components/SubscriptionBadge";
+import UpgradeModal from "@/components/UpgradeModal";
 import { GraphSkeleton } from "@/components/Skeleton";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { createClient } from "@/lib/supabase/client";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import type { GraphData } from "@/types";
 
 // Dynamic import for GraphView (heavy component with force-graph library)
@@ -19,7 +22,7 @@ const GraphView = dynamic(() => import("@/components/GraphView"), {
     ssr: false, // Graph doesn't need server-side rendering
 });
 
-export default function AppPage() {
+function AppContent() {
     const [data, setData] = useState<GraphData>({ nodes: [], links: [] });
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -134,6 +137,9 @@ export default function AppPage() {
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-1.5 sm:gap-2">
+                    {/* Subscription Badge */}
+                    <SubscriptionBadge />
+
                     {/* Search Button */}
                     <button
                         onClick={() => setIsSearchOpen(true)}
@@ -217,6 +223,9 @@ export default function AppPage() {
                 onDataChange={fetchData}
             />
 
+            {/* Upgrade Modal */}
+            <UpgradeModal />
+
             {/* Detail Sidebar (Right Overlay) */}
             {isSidebarOpen && selectedNode && (
                 <NoteDetail
@@ -228,5 +237,13 @@ export default function AppPage() {
                 />
             )}
         </main>
+    );
+}
+
+export default function AppPage() {
+    return (
+        <SubscriptionProvider>
+            <AppContent />
+        </SubscriptionProvider>
     );
 }

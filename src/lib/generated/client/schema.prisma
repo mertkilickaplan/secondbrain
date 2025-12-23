@@ -48,3 +48,17 @@ model Edge {
   @@index([sourceId])
   @@index([targetId])
 }
+
+model UserSubscription {
+  id        String   @id @default(uuid())
+  userId    String   @unique // Supabase user ID
+  tier      String   @default("free") // "free" | "premium"
+  noteCount Int      @default(0) // Current note count for usage tracking
+  maxNotes  Int? // Null for unlimited (premium), number for free
+  aiEnabled Boolean  @default(false) // AI features enabled
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([tier])
+}

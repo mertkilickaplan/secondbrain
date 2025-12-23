@@ -4,6 +4,7 @@ import { fetchUrlTitle } from "@/lib/urlMetadata";
 import { noteContentSchema, validateOrError } from "@/lib/validation";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { requireAuth } from "@/lib/supabase/auth";
+import { canCreateNote, incrementNoteCount, canUseAI } from "@/lib/subscription-helpers";
 
 export const runtime = "nodejs";
 
@@ -17,6 +18,18 @@ export async function POST(req: Request) {
     // Auth check
     const auth = await requireAuth();
     if (auth.response) return auth.response;
+
+    // Subscription check - can user create a note?
+    const canCreate = await canCreateNote(auth.user.id);
+    if (!canCreate) {
+        console.log(`[SUBSCRIPTION] User ${auth.user.id} hit note limit`);
+        return NextResponse.json({
+            error: "Note limit reached",
+            message: "You've reached your free tier limit. Upgrade to Premium for unlimited notes!",
+            code: "LIMIT_REACHED",
+            upgradeUrl: "/app" // Will show upgrade modal in frontend
+        }, { status: 402 }); // 402 Payment Required
+    }
 
     try {
         const body = await req.json();
@@ -47,6 +60,10 @@ export async function POST(req: Request) {
             title = (await fetchUrlTitle(url)) ?? new URL(url).hostname ?? "Untitled Link";
         }
 
+        // Check if user has AI access
+        const hasAI = await canUseAI(auth.user.id);
+        const initialStatus = hasAI ? "processing" : "ready";
+
         const note = await prisma.note.create({
             data: {
                 userId: auth.user.id,
@@ -54,9 +71,13 @@ export async function POST(req: Request) {
                 type,
                 url: type === "url" ? url : null,
                 title: title ?? "New Note",
-                status: "processing",
+                status: initialStatus,
             },
         });
+
+        // Increment note count after successful creation
+        await incrementNoteCount(auth.user.id);
+        console.log(`[SUBSCRIPTION] Note created for user ${auth.user.id}, status: ${initialStatus}`);
 
         return NextResponse.json(note, { status: 201 });
     } catch (error: any) {

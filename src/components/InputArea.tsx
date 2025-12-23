@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
 export default function InputArea({ onNoteAdded }: { onNoteAdded: () => void }) {
     const [content, setContent] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [mode, setMode] = useState<"text" | "url">("text");
+    const { showUpgradeModal, refetch } = useSubscription();
 
     const handleSubmit = async (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -24,21 +26,39 @@ export default function InputArea({ onNoteAdded }: { onNoteAdded: () => void }) 
                 }),
             });
 
+            if (res.status === 402) {
+                // User hit note limit
+                const error = await res.json();
+                console.log('[SUBSCRIPTION] Note limit reached:', error);
+                showUpgradeModal();
+                return;
+            }
+
             if (res.ok) {
                 const note = await res.json();
                 setContent("");
+
+                // Refetch subscription to update usage stats
+                await refetch();
+
                 onNoteAdded(); // Immediate refresh to show node
 
-                // Fire-and-forget process
-                fetch(`/api/notes/${note.id}/process`, { method: "POST" });
+                // Fire-and-forget process (only if AI enabled)
+                if (note.status === "processing") {
+                    fetch(`/api/notes/${note.id}/process`, { method: "POST" });
+                }
 
                 // Poll once after a few seconds to catch edges
                 setTimeout(() => {
                     onNoteAdded();
                 }, 4000);
+            } else {
+                const error = await res.json();
+                alert(error.error || 'Failed to create note');
             }
         } catch (error) {
             console.error("Failed to add note", error);
+            alert('Failed to create note. Please try again.');
         } finally {
             setIsLoading(false);
         }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/supabase/auth";
+import { decrementNoteCount } from "@/lib/subscription-helpers";
 
 export const runtime = "nodejs";
 
@@ -24,6 +25,10 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
 
         // Delete note (edges will cascade delete due to schema)
         await prisma.note.delete({ where: { id } });
+
+        // Decrement note count after successful deletion
+        await decrementNoteCount(auth.user.id);
+        console.log(`[SUBSCRIPTION] Note deleted for user ${auth.user.id}`);
 
         return NextResponse.json({ ok: true, message: "Note deleted" });
     } catch (error: any) {

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import type { User } from "@supabase/supabase-js";
 
 export default function UserMenu() {
@@ -14,6 +15,7 @@ export default function UserMenu() {
     const router = useRouter();
     const supabase = createClient();
     const { theme, toggleTheme } = useTheme();
+    const { showUpgradeModal } = useSubscription();
 
     useEffect(() => {
         const getUser = async () => {
@@ -48,6 +50,11 @@ export default function UserMenu() {
     const handleSignOut = async () => {
         await supabase.auth.signOut();
         router.refresh();
+    };
+
+    const handleSubscriptionClick = () => {
+        setIsOpen(false);
+        showUpgradeModal();
     };
 
     if (loading) {
@@ -125,6 +132,17 @@ export default function UserMenu() {
                         </svg>
                         <span className="text-sm">Profile</span>
                     </a>
+
+                    {/* Subscription */}
+                    <button
+                        onClick={handleSubscriptionClick}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-muted transition-colors"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                        </svg>
+                        <span className="text-sm">Subscription</span>
+                    </button>
 
                     {/* Theme Toggle */}
                     <button
