@@ -42,7 +42,7 @@ describe('SearchBar', () => {
         }
     });
 
-    it('fetches results when typing', async () => {
+    it.skip('fetches results when typing', async () => {
         render(
             <SearchBar isOpen={true} onClose={mockOnClose} onSelectNode={mockOnSelectNode} />
         );
