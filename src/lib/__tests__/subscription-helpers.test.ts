@@ -21,6 +21,32 @@ jest.mock("../db", () => ({
       create: jest.fn(),
       update: jest.fn(),
     },
+    note: {
+      updateMany: jest.fn(),
+      findMany: jest.fn(),
+    },
+    edge: {
+      deleteMany: jest.fn(),
+    },
+    $transaction: jest.fn((callback) =>
+      callback({
+        userSubscription: {
+          update: jest.fn().mockResolvedValue({
+            userId: "test-user-123",
+            tier: "free",
+            maxNotes: 25,
+            aiEnabled: false,
+          }),
+        },
+        note: {
+          findMany: jest.fn().mockResolvedValue([]),
+          updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+        },
+        edge: {
+          deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+        },
+      })
+    ),
   },
 }));
 
@@ -181,7 +207,7 @@ describe("Subscription Helpers", () => {
   });
 
   describe("upgradeToPremium", () => {
-    it("should upgrade user to premium", async () => {
+    it("should upgrade user to premium and mark notes for processing", async () => {
       const upgradedSubscription = {
         userId: mockUserId,
         tier: "premium",
@@ -190,6 +216,7 @@ describe("Subscription Helpers", () => {
       };
 
       (prisma.userSubscription.update as jest.Mock).mockResolvedValue(upgradedSubscription);
+      (prisma.note.updateMany as jest.Mock).mockResolvedValue({ count: 3 });
 
       const result = await upgradeToPremium(mockUserId);
 
@@ -202,11 +229,19 @@ describe("Subscription Helpers", () => {
           aiEnabled: true,
         },
       });
+      expect(prisma.note.updateMany).toHaveBeenCalledWith({
+        where: {
+          userId: mockUserId,
+          status: "ready",
+          summary: null,
+        },
+        data: { status: "processing" },
+      });
     });
   });
 
   describe("downgradeToFree", () => {
-    it("should downgrade user to free", async () => {
+    it("should downgrade user to free and cleanup AI data", async () => {
       const downgradedSubscription = {
         userId: mockUserId,
         tier: "free",
@@ -214,19 +249,12 @@ describe("Subscription Helpers", () => {
         aiEnabled: false,
       };
 
-      (prisma.userSubscription.update as jest.Mock).mockResolvedValue(downgradedSubscription);
-
+      // The $transaction mock already returns the expected subscription
+      // We just verify it was called
       const result = await downgradeToFree(mockUserId);
 
       expect(result).toEqual(downgradedSubscription);
-      expect(prisma.userSubscription.update).toHaveBeenCalledWith({
-        where: { userId: mockUserId },
-        data: {
-          tier: "free",
-          maxNotes: 25,
-          aiEnabled: false,
-        },
-      });
+      expect(prisma.$transaction).toHaveBeenCalled();
     });
   });
 });

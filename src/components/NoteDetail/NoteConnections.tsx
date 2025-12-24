@@ -18,9 +18,15 @@ interface NoteConnectionsProps {
   nodeId: string;
   edges: Edge[];
   allNodes: Node[];
+  canUseAI: boolean;
 }
 
-const NoteConnections: React.FC<NoteConnectionsProps> = ({ nodeId, edges, allNodes }) => {
+const NoteConnections: React.FC<NoteConnectionsProps> = ({ nodeId, edges, allNodes, canUseAI }) => {
+  // Don't show connections for users without AI access
+  if (!canUseAI) {
+    return null;
+  }
+
   const relatedEdges = edges.filter((e) => e.source === nodeId || e.target === nodeId);
 
   return (

@@ -9,6 +9,7 @@ interface NoteContentProps {
   isSaving: boolean;
   status: string;
   isRetrying: boolean;
+  canUseAI: boolean;
   onContentChange: (content: string) => void;
   onSave: (reprocess: boolean) => void;
   onCancel: () => void;
@@ -23,6 +24,7 @@ const NoteContent: React.FC<NoteContentProps> = ({
   isSaving,
   status,
   isRetrying,
+  canUseAI,
   onContentChange,
   onSave,
   onCancel,
@@ -30,8 +32,8 @@ const NoteContent: React.FC<NoteContentProps> = ({
 }) => {
   return (
     <div>
-      {/* Status Indicators */}
-      {(status === "processing" || isRetrying) && (
+      {/* Status Indicators - Only show if user has AI access */}
+      {canUseAI && (status === "processing" || isRetrying) && (
         <div className="mb-4 bg-muted/50 p-3 rounded-lg border border-border animate-pulse">
           <p className="text-xs text-center font-medium">
             {isRetrying ? "Retrying analysis..." : "AI is processing this note..."}
@@ -39,7 +41,7 @@ const NoteContent: React.FC<NoteContentProps> = ({
         </div>
       )}
 
-      {status === "error" && !isRetrying && (
+      {canUseAI && status === "error" && !isRetrying && (
         <div className="mb-4 bg-destructive/10 p-3 rounded-lg border border-destructive/20">
           <p className="text-xs text-destructive font-medium mb-2">AI processing failed.</p>
           <button
@@ -97,7 +99,7 @@ const NoteContent: React.FC<NoteContentProps> = ({
             {content}
           </p>
 
-          {summary && (
+          {canUseAI && summary && (
             <div
               className={`mt-4 p-3 rounded-lg ${
                 status === "error"

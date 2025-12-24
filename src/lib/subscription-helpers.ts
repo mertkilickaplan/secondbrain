@@ -66,10 +66,12 @@ export async function canCreateNote(userId: string): Promise<boolean> {
 
 /**
  * Check if user has AI access
+ * Derives from tier to handle direct Supabase database changes
  */
 export async function canUseAI(userId: string): Promise<boolean> {
   const subscription = await getUserSubscription(userId);
-  return subscription.aiEnabled;
+  // Derive from tier, not aiEnabled field, for consistency
+  return subscription.tier === "premium";
 }
 
 /**
@@ -110,6 +112,7 @@ export async function decrementNoteCount(userId: string): Promise<void> {
 
 /**
  * Upgrade user to premium
+ * Also marks existing notes without AI data for processing
  */
 export async function upgradeToPremium(userId: string): Promise<UserSubscription> {
   const subscription = await prisma.userSubscription.update({
@@ -121,29 +124,79 @@ export async function upgradeToPremium(userId: string): Promise<UserSubscription
     },
   });
 
-  console.log(`[SUBSCRIPTION] Upgraded user to premium: ${userId}`);
+  // Mark existing notes without AI summary for processing
+  const updatedNotes = await prisma.note.updateMany({
+    where: {
+      userId,
+      status: "ready",
+      summary: null, // Notes that haven't been AI processed
+    },
+    data: { status: "processing" },
+  });
+
+  console.log(
+    `[SUBSCRIPTION] Upgraded user to premium: ${userId}, marked ${updatedNotes.count} notes for AI processing`
+  );
   return subscription as UserSubscription;
 }
 
 /**
  * Downgrade user to free
+ * Also cleans up AI data and connections
  */
 export async function downgradeToFree(userId: string): Promise<UserSubscription> {
-  const subscription = await prisma.userSubscription.update({
-    where: { userId },
-    data: {
-      tier: SUBSCRIPTION_CONFIG.FREE_TIER.tier,
-      maxNotes: SUBSCRIPTION_CONFIG.FREE_TIER.maxNotes,
-      aiEnabled: SUBSCRIPTION_CONFIG.FREE_TIER.aiEnabled,
-    },
+  // Use transaction for atomic cleanup
+  const result = await prisma.$transaction(async (tx) => {
+    // 1. Update subscription
+    const subscription = await tx.userSubscription.update({
+      where: { userId },
+      data: {
+        tier: SUBSCRIPTION_CONFIG.FREE_TIER.tier,
+        maxNotes: SUBSCRIPTION_CONFIG.FREE_TIER.maxNotes,
+        aiEnabled: SUBSCRIPTION_CONFIG.FREE_TIER.aiEnabled,
+      },
+    });
+
+    // 2. Get user's note IDs for edge cleanup
+    const userNotes = await tx.note.findMany({
+      where: { userId },
+      select: { id: true },
+    });
+    const noteIds = userNotes.map((n) => n.id);
+
+    // 3. Delete edges connected to user's notes (if any)
+    if (noteIds.length > 0) {
+      const deletedEdges = await tx.edge.deleteMany({
+        where: {
+          OR: [{ sourceId: { in: noteIds } }, { targetId: { in: noteIds } }],
+        },
+      });
+      console.log(`[SUBSCRIPTION] Deleted ${deletedEdges.count} connections for user: ${userId}`);
+    }
+
+    // 4. Clear AI data from notes (keep the notes themselves)
+    const clearedNotes = await tx.note.updateMany({
+      where: { userId },
+      data: {
+        summary: null,
+        topics: null,
+        embedding: null,
+        status: "ready",
+      },
+    });
+
+    console.log(
+      `[SUBSCRIPTION] Downgraded user to free with cleanup: ${userId}, cleared AI data from ${clearedNotes.count} notes`
+    );
+    return subscription;
   });
 
-  console.log(`[SUBSCRIPTION] Downgraded user to free: ${userId}`);
-  return subscription as UserSubscription;
+  return result as UserSubscription;
 }
 
 /**
  * Get usage statistics for a user
+ * Note: canUseAI is derived from tier to handle direct Supabase database changes
  */
 export async function getUsageStats(userId: string): Promise<UsageStats> {
   const subscription = await getUserSubscription(userId);
@@ -156,14 +209,18 @@ export async function getUsageStats(userId: string): Promise<UsageStats> {
   const canCreate =
     subscription.maxNotes === null || subscription.noteCount < subscription.maxNotes;
 
+  // Derive AI access from tier, not the aiEnabled field
+  // This handles cases where tier is changed directly in Supabase
+  const canUseAI = subscription.tier === "premium";
+
   return {
     noteCount: subscription.noteCount,
     maxNotes: subscription.maxNotes,
     tier: subscription.tier as SubscriptionTier,
-    aiEnabled: subscription.aiEnabled,
+    aiEnabled: canUseAI, // Derived from tier
     percentUsed,
     canCreateNote: canCreate,
-    canUseAI: subscription.aiEnabled,
+    canUseAI,
   };
 }
 

@@ -279,13 +279,31 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
     // Update note status with user-friendly error message
     try {
-      await prisma.note.update({
-        where: { id },
-        data: {
-          status: "error",
-          summary: userMessage,
-        },
-      });
+      // For quota errors, mark ALL processing notes as failed for consistency
+      if (errorCategory === "quota") {
+        await prisma.note.updateMany({
+          where: {
+            userId: auth.user.id,
+            status: "processing",
+          },
+          data: {
+            status: "error",
+            summary: userMessage,
+          },
+        });
+        logger.info("Batch updated all processing notes to error due to quota limit", {
+          userId: auth.user.id,
+        });
+      } else {
+        // For other errors, only update the specific note
+        await prisma.note.update({
+          where: { id },
+          data: {
+            status: "error",
+            summary: userMessage,
+          },
+        });
+      }
     } catch (dbError: any) {
       logger.error("Failed to update note status", { error: dbError.message, noteId: id });
     }

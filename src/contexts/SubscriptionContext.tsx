@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import type { SubscriptionTier } from "@/lib/subscription-config";
 
 interface UsageStats {
@@ -31,6 +31,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [error, setError] = useState<string | null>(null);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
+  // Track previous tier to detect upgrades
+  const previousTierRef = useRef<SubscriptionTier | null>(null);
+
   const fetchSubscription = useCallback(async () => {
     try {
       setLoading(true);
@@ -50,6 +53,25 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       }
 
       const data = await response.json();
+
+      // Detect tier change scenarios that require processing:
+      // 1. free -> premium upgrade (via polling)
+      // 2. Initial load as premium (after Supabase change + page refresh)
+      const shouldTriggerProcessing =
+        (previousTierRef.current === "free" && data.tier === "premium") ||
+        (previousTierRef.current === null && data.tier === "premium" && data.canUseAI);
+
+      if (shouldTriggerProcessing) {
+        console.log(
+          "[SUBSCRIPTION] Detected premium access, triggering AI processing for unprocessed notes"
+        );
+        // Trigger process-pending in background
+        fetch("/api/notes/process-pending", { method: "POST" }).catch(console.error);
+      }
+
+      // Update previous tier reference
+      previousTierRef.current = data.tier;
+
       setSubscription(data);
     } catch (err: any) {
       console.error("Error fetching subscription:", err);
@@ -64,6 +86,11 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     fetchSubscription();
+
+    // Poll every 30 seconds for subscription changes (e.g., made via Supabase dashboard)
+    const interval = setInterval(fetchSubscription, 30000);
+
+    return () => clearInterval(interval);
   }, [fetchSubscription]);
 
   const showUpgradeModal = useCallback(() => {

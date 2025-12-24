@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/contexts/ToastContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import NoteHeader from "./NoteHeader";
 import NoteContent from "./NoteContent";
@@ -24,6 +25,9 @@ export default function NoteDetail({
   onDataChange,
 }: NoteDetailProps) {
   const { addToast } = useToast();
+  const { subscription } = useSubscription();
+  const canUseAI = subscription?.canUseAI ?? false;
+
   const [isRetrying, setIsRetrying] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -242,13 +246,16 @@ export default function NoteDetail({
           isSaving={isSaving}
           status={node.status}
           isRetrying={isRetrying}
+          canUseAI={canUseAI}
           onContentChange={setEditContent}
           onSave={handleSaveEdit}
           onCancel={handleCancelEdit}
           onRetry={handleRetry}
         />
 
-        {!isEditing && <NoteConnections nodeId={node.id} edges={edges} allNodes={allNodes} />}
+        {!isEditing && (
+          <NoteConnections nodeId={node.id} edges={edges} allNodes={allNodes} canUseAI={canUseAI} />
+        )}
       </div>
     </aside>
   );
