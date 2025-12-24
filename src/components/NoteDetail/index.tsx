@@ -235,7 +235,13 @@ export default function NoteDetail({
           onSelectTag={handleSelectTag}
           onKeyDown={handleKeyDown}
           onTagFocus={() => setShowTagDropdown(true)}
-          onTagBlur={() => setTimeout(() => setShowTagDropdown(false), 200)}
+          onTagBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+            // Only close dropdown if focus moved outside the tag component
+            const relatedTarget = e.relatedTarget as HTMLElement | null;
+            if (!relatedTarget || !e.currentTarget.closest(".relative")?.contains(relatedTarget)) {
+              setTimeout(() => setShowTagDropdown(false), 200);
+            }
+          }}
         />
 
         <NoteContent

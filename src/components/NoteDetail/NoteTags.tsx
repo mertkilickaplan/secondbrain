@@ -15,7 +15,7 @@ interface NoteTagsProps {
   onSelectTag: (tag: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onTagFocus: () => void;
-  onTagBlur: () => void;
+  onTagBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
 const NoteTags: React.FC<NoteTagsProps> = ({
