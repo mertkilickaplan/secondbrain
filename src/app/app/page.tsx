@@ -133,7 +133,7 @@ function AppContent() {
         {/* Left: Brand */}
         <div className="flex flex-col">
           <h1 className="text-base sm:text-lg font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent leading-tight">
-            Second Brain Lite
+            WhichNotes
           </h1>
           <p className="text-[8px] sm:text-[9px] text-muted-foreground uppercase tracking-widest opacity-70">
             AI Knowledge Map

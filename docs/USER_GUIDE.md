@@ -1,6 +1,6 @@
 # User Guide
 
-Welcome to Second Brain Lite! This guide will help you get the most out of your personal knowledge management system.
+Welcome to WhichNotes! This guide will help you get the most out of your personal knowledge management system.
 
 ## Table of Contents
 
@@ -339,8 +339,8 @@ Not yet, but the web app works great on mobile browsers!
 
 ### How do I contact support?
 
-- Email: support@secondbrainlite.com
-- GitHub Issues: [Report a bug](https://github.com/YOUR_USERNAME/second-brain-lite/issues)
+- Email: support@whichnotes.com
+- GitHub Issues: [Report a bug](https://github.com/YOUR_USERNAME/whichnotes/issues)
 
 ---
 
@@ -378,11 +378,11 @@ Need more help?
 
 1. 📚 Check [API Documentation](./API.md) for developers
 2. 🏗️ Read [Architecture Decisions](./ARCHITECTURE.md) for technical details
-3. 🐛 Report bugs on [GitHub Issues](https://github.com/YOUR_USERNAME/second-brain-lite/issues)
+3. 🐛 Report bugs on [GitHub Issues](https://github.com/YOUR_USERNAME/whichnotes/issues)
 4. 💬 Join our community discussions
 
 ---
 
 **Happy note-taking!** 🎉
 
-Build your second brain, one note at a time.
+Build your knowledge graph, one note at a time.

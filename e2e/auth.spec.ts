@@ -6,10 +6,10 @@ test.describe("Authentication", () => {
   });
 
   test("should show landing page for unauthenticated users", async ({ page }) => {
-    await expect(page).toHaveTitle(/Second Brain Lite/i);
+    await expect(page).toHaveTitle(/WhichNotes/i);
 
     // Should see landing page elements
-    await expect(page.getByRole("heading", { name: /second brain/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /whichnotes/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /get started/i })).toBeVisible();
   });
 

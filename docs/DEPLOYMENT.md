@@ -1,6 +1,6 @@
 # Deployment Guide
 
-Complete guide for deploying Second Brain Lite to production.
+Complete guide for deploying WhichNotes to production.
 
 ## Prerequisites
 
@@ -20,7 +20,7 @@ Before deploying, ensure you have:
 1. Go to [Supabase Dashboard](https://app.supabase.com)
 2. Click **"New Project"**
 3. Fill in:
-   - **Name**: `second-brain-lite` (or your choice)
+   - **Name**: `whichnotes` (or your choice)
    - **Database Password**: Generate a strong password (save it!)
    - **Region**: Choose closest to your users
 4. Click **"Create new project"**
@@ -61,7 +61,7 @@ Before deploying, ensure you have:
 
 3. Run migrations:
    ```bash
-   cd /path/to/second-brain-lite
+   cd /path/to/whichnotes
    npx prisma migrate deploy
    ```
 
@@ -140,12 +140,12 @@ CREATE POLICY "Users can view own subscription"
 If not already done:
 
 ```bash
-cd /path/to/second-brain-lite
+cd /path/to/whichnotes
 git init
 git add .
 git commit -m "Initial commit"
 git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/second-brain-lite.git
+git remote add origin https://github.com/YOUR_USERNAME/whichnotes.git
 git push -u origin main
 ```
 
@@ -418,4 +418,4 @@ If you encounter issues:
 
 **Deployment Complete!** 🎉
 
-Your Second Brain Lite is now live at `https://your-app.vercel.app`
+Your WhichNotes app is now live at `https://your-app.vercel.app`

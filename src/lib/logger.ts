@@ -1,5 +1,5 @@
 /**
- * Structured Logger for Second Brain Lite
+ * Structured Logger for WhichNotes
  *
  * Provides consistent logging across the application with:
  * - Pretty console logs in development

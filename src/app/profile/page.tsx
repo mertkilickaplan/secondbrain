@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
+import DeleteAccountButton from "@/components/Profile/DeleteAccountButton";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
@@ -294,6 +295,31 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Danger Zone */}
+          <div className="mt-8 pt-6 border-t border-destructive/20">
+            <h3 className="text-sm font-medium text-destructive mb-2 flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="text-destructive"
+              >
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                <path d="M12 9v4" />
+                <path d="M12 17h.01" />
+              </svg>
+              Danger Zone
+            </h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              Once you delete your account, there is no going back. Please be certain.
+            </p>
+            <DeleteAccountButton />
           </div>
         </div>
       </div>

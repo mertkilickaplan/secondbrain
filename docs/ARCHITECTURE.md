@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADR)
 
-Documentation of key architectural decisions made in Second Brain Lite.
+Documentation of key architectural decisions made in WhichNotes.
 
 ---
 
@@ -488,7 +488,7 @@ Use `react-force-graph-2d` library with:
 
 ## Summary
 
-These ADRs document the key architectural decisions that shaped Second Brain Lite. They provide context for future developers and serve as a reference for understanding why certain choices were made.
+These ADRs document the key architectural decisions that shaped WhichNotes. They provide context for future developers and serve as a reference for understanding why certain choices were made.
 
 ### Key Principles
 

@@ -1,6 +1,6 @@
 # API Documentation
 
-Complete API reference for Second Brain Lite backend endpoints.
+Complete API reference for WhichNotes backend endpoints.
 
 ## Base URL
 

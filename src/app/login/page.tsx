@@ -187,7 +187,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full bg-card border border-border rounded-xl p-8 shadow-lg">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-400">
-            Second Brain Lite
+            WhichNotes
           </h1>
           <p className="text-sm text-muted-foreground mt-2">
             {isSignUp ? "Create an account" : "Sign in to access your knowledge"}

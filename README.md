@@ -1,6 +1,6 @@
-# Second Brain Lite 🧠
+# WhichNotes 🧠
 
-A modern Personal Knowledge Management (PKM) system powered by AI. Build your second brain with intelligent note-taking, automatic connections, and beautiful graph visualization.
+A modern Personal Knowledge Management (PKM) system powered by AI. Build your knowledge graph with intelligent note-taking, automatic connections, and beautiful visualization.
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -31,8 +31,8 @@ See the [User Guide](./docs/USER_GUIDE.md) for detailed instructions.
 
 ```bash
 # Clone repository
-git clone https://github.com/YOUR_USERNAME/second-brain-lite.git
-cd second-brain-lite
+git clone https://github.com/YOUR_USERNAME/whichnotes.git
+cd whichnotes
 
 # Install dependencies
 npm install
@@ -123,7 +123,7 @@ npm run test:all
 ## 📦 Project Structure
 
 ```
-second-brain-lite/
+whichnotes/
 ├── src/
 │   ├── app/              # Next.js app router
 │   │   ├── api/          # API routes
@@ -170,9 +170,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/second-brain-lite/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/second-brain-lite/discussions)
-- **Email**: support@secondbrainlite.com
+- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/whichnotes/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/whichnotes/discussions)
+- **Email**: support@whichnotes.com
 
 ## 🗺️ Roadmap
 

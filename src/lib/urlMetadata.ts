@@ -6,7 +6,7 @@ export async function fetchUrlTitle(url: string): Promise<string | null> {
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; SecondBrainLite/1.0)",
+        "User-Agent": "Mozilla/5.0 (compatible; WhichNotes/1.0)",
       },
     });
 

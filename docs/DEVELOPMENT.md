@@ -1,6 +1,6 @@
 # Development Setup Guide
 
-Complete guide for setting up Second Brain Lite for local development.
+Complete guide for setting up WhichNotes for local development.
 
 ## Prerequisites
 
@@ -30,10 +30,10 @@ git --version   # Should be 2.x.x or higher
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/second-brain-lite.git
+git clone https://github.com/YOUR_USERNAME/whichnotes.git
 
 # Navigate to project directory
-cd second-brain-lite
+cd whichnotes
 
 # Verify files
 ls -la
@@ -250,7 +250,7 @@ You should see:
 ### File Structure
 
 ```
-second-brain-lite/
+whichnotes/
 ├── src/
 │   ├── app/              # Next.js app router
 │   │   ├── api/          # API routes

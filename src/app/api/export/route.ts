@@ -58,7 +58,7 @@ export async function GET() {
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Content-Disposition": `attachment; filename="secondbrain-export-${new Date().toISOString().split("T")[0]}.json"`,
+        "Content-Disposition": `attachment; filename="whichnotes-export-${new Date().toISOString().split("T")[0]}.json"`,
       },
     });
   } catch (error) {

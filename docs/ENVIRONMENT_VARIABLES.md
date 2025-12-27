@@ -1,6 +1,6 @@
 # Environment Variables Guide
 
-Complete reference for all environment variables used in Second Brain Lite.
+Complete reference for all environment variables used in WhichNotes.
 
 ## Required Variables
 

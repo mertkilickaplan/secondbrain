@@ -8,7 +8,7 @@ import ClientWrapper from "@/components/ClientWrapper";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Second Brain Lite",
+  title: "WhichNotes",
   description: "AI-powered personal knowledge map",
 };
 
